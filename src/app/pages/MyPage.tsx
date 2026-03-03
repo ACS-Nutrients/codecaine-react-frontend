@@ -1,0 +1,494 @@
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight, Bell, Share2, MoreVertical, X, Plus, Check, ScanLine } from 'lucide-react';
+import { Switch } from '../components/ui/switch';
+
+export function MyPage() {
+  const [supplements, setSupplements] = useState([
+    {
+      id: 1,
+      name: 'Omega-3 (EPA/DHA)',
+      icon: '🟠',
+      dosage: '1일 복용량: 1일 (1200mg)',
+      frequency: '복용 시간: 1일 1회 (아침)',
+      duration: '60정',
+      remaining: '60정',
+      progress: 73,
+      totalDays: 60,
+      purchaseDate: '2024.04.10',
+      expiryDate: '2024.05.10',
+      active: true,
+    },
+    {
+      id: 2,
+      name: 'Vitamin B Complex',
+      icon: '🟡',
+      dosage: '1일 복용량: 1일 (아침 식사 후)',
+      frequency: '복용 시간: 1일 (저녁)',
+      duration: '60정',
+      remaining: '60정',
+      progress: 65,
+      totalDays: 60,
+      purchaseDate: '2025.07.01',
+      active: true,
+    },
+    {
+      id: 3,
+      name: 'Vitamin C 1000mg',
+      icon: '🟠',
+      dosage: '1일 복용량: 1일 (1000mg)',
+      frequency: '복용 시간: 저녁(적녁)',
+      duration: '30정',
+      purchaseDate: '2024.04.05',
+      active: false,
+    },
+  ]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedSupplement, setSelectedSupplement] = useState<number | null>(null);
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const [allergies, setAllergies] = useState(['땅콩', '새우']);
+  const [conditions, setConditions] = useState(['고혈압', '당뇨']);
+  
+  // States for editing
+  const [isEditingUser, setIsEditingUser] = useState(false);
+  const [isAddingAllergy, setIsAddingAllergy] = useState(false);
+  const [isAddingCondition, setIsAddingCondition] = useState(false);
+  
+  const [newAllergy, setNewAllergy] = useState('');
+  const [newCondition, setNewCondition] = useState('');
+  
+  const [userInfo, setUserInfo] = useState({
+    birthdate: '1990-01-10',
+    gender: '남성',
+    phone: '010-1234-5678',
+    weight: '72',
+    height: '175',
+  });
+  
+  const [editedUserInfo, setEditedUserInfo] = useState(userInfo);
+
+  const toggleSupplement = (id: number) => {
+    setSupplements(supplements.map(s => 
+      s.id === id ? { ...s, active: !s.active } : s
+    ));
+  };
+
+  const handleSupplementClick = (id: number) => {
+    setSelectedSupplement(selectedSupplement === id ? null : id);
+  };
+
+  const removeAllergy = (allergy: string) => {
+    setAllergies(allergies.filter(a => a !== allergy));
+  };
+
+  const removeCondition = (condition: string) => {
+    setConditions(conditions.filter(c => c !== condition));
+  };
+  
+  const handleAddAllergy = () => {
+    if (newAllergy.trim()) {
+      setAllergies([...allergies, newAllergy.trim()]);
+      setNewAllergy('');
+      setIsAddingAllergy(false);
+    }
+  };
+  
+  const handleAddCondition = () => {
+    if (newCondition.trim()) {
+      setConditions([...conditions, newCondition.trim()]);
+      setNewCondition('');
+      setIsAddingCondition(false);
+    }
+  };
+  
+  const handleSaveUserInfo = () => {
+    setUserInfo(editedUserInfo);
+    setIsEditingUser(false);
+  };
+  
+  const handleCancelEditUser = () => {
+    setEditedUserInfo(userInfo);
+    setIsEditingUser(false);
+  };
+
+  // Filter supplements based on active/inactive status
+  const filteredSupplements = supplements.filter(supplement => {
+    if (filter === 'active') return supplement.active;
+    if (filter === 'inactive') return !supplement.active;
+    return true; // 'all'
+  });
+
+  const selected = supplements.find(s => s.id === selectedSupplement);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <h1 className="text-xl font-bold text-gray-900">내 정보 관리</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-gray-100 rounded-lg">
+              <Bell className="w-5 h-5 text-gray-600" />
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-lg">
+              <Share2 className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="grid grid-cols-2 gap-6">
+          {/* Left Panel - Supplement List */}
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">영양제</h2>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setFilter('all')}
+                    className={`px-3 py-2 rounded-lg text-sm ${
+                      filter === 'all' 
+                        ? 'bg-blue-500 text-white font-medium' 
+                        : 'bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    전체
+                  </button>
+                  <button 
+                    onClick={() => setFilter('active')}
+                    className={`px-4 py-2 rounded-lg text-sm ${
+                      filter === 'active' 
+                        ? 'bg-blue-500 text-white font-medium' 
+                        : 'bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    활성
+                  </button>
+                  <button 
+                    onClick={() => setFilter('inactive')}
+                    className={`px-3 py-2 rounded-lg text-sm ${
+                      filter === 'inactive' 
+                        ? 'bg-blue-500 text-white font-medium' 
+                        : 'bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    비활성
+                  </button>
+                </div>
+                <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm hover:bg-gray-100 transition-colors">
+                  <ScanLine className="w-4 h-4" />
+                  <span>스캔하기</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {filteredSupplements.map((supplement) => (
+                <div
+                  key={supplement.id}
+                  onClick={() => handleSupplementClick(supplement.id)}
+                  className={`border rounded-xl p-4 transition-colors cursor-pointer ${
+                    selectedSupplement === supplement.id
+                      ? 'border-blue-400 bg-blue-50'
+                      : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl">
+                        {supplement.icon}
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">{supplement.name}</h3>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Switch
+                          checked={supplement.active}
+                          onCheckedChange={() => toggleSupplement(supplement.id)}
+                        />
+                      </div>
+                      <button 
+                        className="text-gray-400 hover:text-gray-600"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p>{supplement.dosage}</p>
+                    <p>{supplement.frequency}</p>
+                    {supplement.remaining && (
+                      <p className="text-gray-500">≈ {supplement.remaining}</p>
+                    )}
+                  </div>
+
+                  {supplement.progress && (
+                    <div className="mt-3">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full transition-all"
+                          style={{ width: `${supplement.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {supplement.purchaseDate && !supplement.progress && (
+                    <div className="mt-3">
+                      <p className="text-xs text-gray-500">구매일: {supplement.purchaseDate}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <button className="p-2 hover:bg-gray-100 rounded-lg">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm">
+                {currentPage}
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-lg">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Right Panel - User Info or Supplement Detail */}
+          {selectedSupplement ? (
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <button 
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  onClick={() => setSelectedSupplement(null)}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl">
+                    {selected?.icon}
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">{selected?.name}</h2>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">1일 복용량</span>
+                  <span className="font-medium text-gray-900">1일 (1200mg)</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">복용 시간</span>
+                  <span className="font-medium text-gray-900">1일 1회 (아침)</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">총 60정</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">남은 양제</span>
+                  <span className="font-medium text-gray-900">73일 / 60정</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">섭취 기간</span>
+                  <span className="font-medium text-gray-900">2024.04.10 ~ 2024.05.10</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">구매일</span>
+                  <span className="font-medium text-gray-900">2024.04.05</span>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <h3 className="font-bold text-gray-900 mb-4">영양성분 정보</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">EPA (오메가-3):</span>
+                    <span className="font-medium text-gray-900">600mg</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">DHA (오메가-3):</span>
+                    <span className="font-medium text-gray-900">400mg</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">이우:</span>
+                    <span className="font-medium text-gray-900">1200mg</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">비타민 E:</span>
+                    <span className="font-medium text-gray-900">11mg</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800 flex items-start gap-2">
+                    <span>⚠️</span>
+                    <span>
+                      주의 성분: EPA 1000mg 이상
+                      <br />
+                      <span className="text-xs text-yellow-700 mt-1 block">
+                        주의 성분 함량이 설계량에 대한 정보입니다. 성당 주의하시기 바랍니다.
+                      </span>
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* User Info */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">유저 정보</h2>
+                  <button className="text-blue-500 text-sm font-medium hover:text-blue-600" onClick={() => setIsEditingUser(true)}>
+                    수정
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">• 생년월일</span>
+                    <span className="text-gray-900">{isEditingUser ? <input type="text" value={editedUserInfo.birthdate} onChange={(e) => setEditedUserInfo({...editedUserInfo, birthdate: e.target.value})} className="border border-gray-300 px-2 py-1 rounded" /> : userInfo.birthdate}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">• 성별 :</span>
+                    <span className="text-gray-900">{isEditingUser ? <input type="text" value={editedUserInfo.gender} onChange={(e) => setEditedUserInfo({...editedUserInfo, gender: e.target.value})} className="border border-gray-300 px-2 py-1 rounded" /> : userInfo.gender}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">• 연락처</span>
+                    <span className="text-gray-900">{isEditingUser ? <input type="text" value={editedUserInfo.phone} onChange={(e) => setEditedUserInfo({...editedUserInfo, phone: e.target.value})} className="border border-gray-300 px-2 py-1 rounded" /> : userInfo.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">• 체중</span>
+                    <span className="text-gray-900">{isEditingUser ? <input type="text" value={editedUserInfo.weight} onChange={(e) => setEditedUserInfo({...editedUserInfo, weight: e.target.value})} className="border border-gray-300 px-2 py-1 rounded" /> : userInfo.weight} kg</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">• 키</span>
+                    <span className="text-gray-900">{isEditingUser ? <input type="text" value={editedUserInfo.height} onChange={(e) => setEditedUserInfo({...editedUserInfo, height: e.target.value})} className="border border-gray-300 px-2 py-1 rounded" /> : userInfo.height} cm</span>
+                  </div>
+                </div>
+                
+                {isEditingUser && (
+                  <div className="flex items-center justify-end mt-4">
+                    <button className="text-gray-500 hover:text-gray-700 mr-2" onClick={handleCancelEditUser}>
+                      취소
+                    </button>
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onClick={handleSaveUserInfo}>
+                      저장
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Allergy Info */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">알러지 정보</h2>
+                  <button className="text-blue-500 hover:text-blue-600" onClick={() => setIsAddingAllergy(true)}>
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {allergies.map((allergy) => (
+                    <div
+                      key={allergy}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg border border-red-200"
+                    >
+                      <span>{allergy}</span>
+                      <button
+                        onClick={() => removeAllergy(allergy)}
+                        className="hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                {isAddingAllergy && (
+                  <div className="mt-4">
+                    <input
+                      type="text"
+                      value={newAllergy}
+                      onChange={(e) => setNewAllergy(e.target.value)}
+                      className="border border-gray-300 px-2 py-1 rounded mr-2"
+                      placeholder="알러지 추가"
+                    />
+                    <button className="text-gray-500 hover:text-gray-700 mr-2" onClick={handleCancelEditUser}>
+                      취소
+                    </button>
+                    <button
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      onClick={handleAddAllergy}
+                    >
+                      추가
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Medical Condition Info */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">기저질환 정보</h2>
+                  <button className="text-blue-500 hover:text-blue-600" onClick={() => setIsAddingCondition(true)}>
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {conditions.map((condition) => (
+                    <div
+                      key={condition}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg border border-orange-200"
+                    >
+                      <span>{condition}</span>
+                      <button
+                        onClick={() => removeCondition(condition)}
+                        className="hover:text-orange-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                {isAddingCondition && (
+                  <div className="mt-4">
+                    <input
+                      type="text"
+                      value={newCondition}
+                      onChange={(e) => setNewCondition(e.target.value)}
+                      className="border border-gray-300 px-2 py-1 rounded mr-2"
+                      placeholder="기저질환 추가"
+                    />
+                    <button className="text-gray-500 hover:text-gray-700 mr-2" onClick={handleCancelEditUser}>
+                      취소
+                    </button>
+                    <button
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      onClick={handleAddCondition}
+                    >
+                      추가
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
