@@ -48,7 +48,7 @@ export function Home() {
             <div className="mb-6">
               <span className="text-gray-900 font-medium">분석 기록 </span>
               <Link 
-                to="/analysis" 
+                to="/analysis-history" 
                 className="text-orange-500 font-bold hover:underline cursor-pointer">3건
               </Link>
             </div>

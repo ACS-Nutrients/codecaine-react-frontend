@@ -643,8 +643,8 @@ export function Recommendation() {
 
   const handleHealthConfirm = () => {
     fadeTo('analyzing');
-    // 2.5초 후 결과 페이지로 이동
-    setTimeout(() => navigate('/chatbot'), 2800);
+    // 2.5초 후 추천 결과 페이지로 이동
+    setTimeout(() => navigate('/recommendation-result'), 2800);
   };
 
   const handleHealthBack = () => fadeTo('consent');

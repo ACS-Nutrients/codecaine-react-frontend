@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Bell, Share2, MoreVertical, X, Plus, Check, ScanLine } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bell, Share2, MoreVertical, X, Plus, Check, ScanLine, Upload, Image as ImageIcon } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
 
 export function MyPage() {
@@ -17,6 +17,7 @@ export function MyPage() {
       purchaseDate: '2024.04.10',
       expiryDate: '2024.05.10',
       active: true,
+      nutritionImage: null as string | null,
     },
     {
       id: 2,
@@ -30,6 +31,7 @@ export function MyPage() {
       totalDays: 60,
       purchaseDate: '2025.07.01',
       active: true,
+      nutritionImage: null as string | null,
     },
     {
       id: 3,
@@ -40,6 +42,7 @@ export function MyPage() {
       duration: '30정',
       purchaseDate: '2024.04.05',
       active: false,
+      nutritionImage: null as string | null,
     },
   ]);
 
@@ -54,6 +57,7 @@ export function MyPage() {
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [isAddingAllergy, setIsAddingAllergy] = useState(false);
   const [isAddingCondition, setIsAddingCondition] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   
   const [newAllergy, setNewAllergy] = useState('');
   const [newCondition, setNewCondition] = useState('');
@@ -76,6 +80,30 @@ export function MyPage() {
 
   const handleSupplementClick = (id: number) => {
     setSelectedSupplement(selectedSupplement === id ? null : id);
+  };
+  
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && selectedSupplement) {
+      // 실제 환경에서는 여기서 AWS Textract API를 호출하여 이미지에서 텍스트를 추출합니다
+      // TODO: AWS Textract 연동
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSupplements(supplements.map(s => 
+          s.id === selectedSupplement ? { ...s, nutritionImage: reader.result as string } : s
+        ));
+        setIsUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleRemoveImage = () => {
+    if (selectedSupplement) {
+      setSupplements(supplements.map(s => 
+        s.id === selectedSupplement ? { ...s, nutritionImage: null } : s
+      ));
+    }
   };
 
   const removeAllergy = (allergy: string) => {
@@ -311,37 +339,51 @@ export function MyPage() {
 
               <div className="mt-8">
                 <h3 className="font-bold text-gray-900 mb-4">영양성분 정보</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">EPA (오메가-3):</span>
-                    <span className="font-medium text-gray-900">600mg</span>
+                
+                {selected?.nutritionImage ? (
+                  <div className="space-y-4">
+                    <div className="relative border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
+                      <img 
+                        src={selected.nutritionImage} 
+                        alt="영양성분 이미지" 
+                        className="w-full h-auto"
+                      />
+                      <button 
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 text-center">
+                      AWS Textract로 스캔된 영양성분 정보
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">DHA (오메가-3):</span>
-                    <span className="font-medium text-gray-900">400mg</span>
+                ) : (
+                  <div>
+                    <label htmlFor="nutrition-upload" className="block">
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                            <Upload className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-700">스캔한 이미지를 업로드하세요</p>
+                            <p className="text-sm text-gray-500 mt-1">영양성분표 이미지를 선택하면 자동으로 분석됩니다</p>
+                            <p className="text-xs text-gray-400 mt-2">AWS Textract 연동 가능</p>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+                    <input 
+                      id="nutrition-upload"
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">이우:</span>
-                    <span className="font-medium text-gray-900">1200mg</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">비타민 E:</span>
-                    <span className="font-medium text-gray-900">11mg</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800 flex items-start gap-2">
-                    <span>⚠️</span>
-                    <span>
-                      주의 성분: EPA 1000mg 이상
-                      <br />
-                      <span className="text-xs text-yellow-700 mt-1 block">
-                        주의 성분 함량이 설계량에 대한 정보입니다. 성당 주의하시기 바랍니다.
-                      </span>
-                    </span>
-                  </p>
-                </div>
+                )}
               </div>
             </div>
           ) : (

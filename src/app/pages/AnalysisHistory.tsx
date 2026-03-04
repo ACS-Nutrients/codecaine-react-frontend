@@ -1,16 +1,61 @@
 import { MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+
+// 백엔드에서 받을 데이터의 타입을 미리 정의해 둡니다. (TypeScript 사용 시)
+interface RecordType {
+  id: number; // DB에서 내려주는 고유 ID가 있으면 리스트 렌더링에 좋습니다.
+  date: string;
+  title: string;
+}
 
 export function AnalysisHistory() {
   const navigate = useNavigate();
 
-  const records = [
-    { date: '2026.02.10', title: '영양제 추천 결과' },
-    { date: '2026.02.05', title: '영양제 추천 결과' },
-    { date: '2026.02.01', title: '영양제 추천 결과' },
-  ];
+  // 1. 데이터를 저장할 상태 (초기값은 빈 배열)
+  const [records, setRecords] = useState<RecordType[]>([]);
+  // 2. 로딩 상태를 관리할 상태
+  const [isLoading, setIsLoading] = useState(true);
+  // 3. 에러 발생 시 처리할 상태
+  const [error, setError] = useState<string | null>(null);
+
+  // 컴포넌트가 처음 화면에 나타날 때(mount) 백엔드에 데이터를 요청합니다.
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        setIsLoading(true);
+        
+        // =========================================================
+        // 🚨 나중에 Python 백엔드가 완성되면 아래 주석을 풀고 적용하세요.
+        // const response = await fetch('http://localhost:8000/api/analysis/history');
+        // if (!response.ok) throw new Error('네트워크 응답이 좋지 않습니다.');
+        // const data = await response.json();
+        // setRecords(data);
+        // =========================================================
+
+        // 지금은 백엔드가 없으므로, 통신하는 '척' 1초 딜레이를 줍니다. (Mock API)
+        setTimeout(() => {
+          const mockData = [
+            { id: 1, date: '2026.02.10', title: '영양제 추천 결과' },
+            { id: 2, date: '2026.02.05', title: '영양제 추천 결과' },
+            { id: 3, date: '2026.02.01', title: '영양제 추천 결과' },
+          ];
+          setRecords(mockData);
+          setIsLoading(false); // 데이터 로딩 완료
+        }, 1000);
+
+      } catch (err) {
+        setError('데이터를 불러오는 데 실패했습니다.');
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecords();
+  }, []);
 
   const handleViewDetail = (date: string) => {
+    // 실제로는 date보다는 record의 id 값을 넘기는 것이 조회에 더 좋습니다.
+    // navigate(`/chatbot/${id}`);
     navigate('/chatbot');
   };
 
@@ -28,9 +73,31 @@ export function AnalysisHistory() {
           </div>
 
           <div className="space-y-4">
-            {records.map((record, index) => (
+            {/* 로딩 중일 때 보여줄 UI */}
+            {isLoading && (
+              <div className="text-center py-8 text-gray-500">
+                기록을 불러오는 중입니다...
+              </div>
+            )}
+
+            {/* 에러가 발생했을 때 보여줄 UI */}
+            {error && (
+              <div className="text-center py-8 text-red-500">
+                {error}
+              </div>
+            )}
+
+            {/* 로딩도 끝났고 에러도 없는데 데이터가 없을 때 */}
+            {!isLoading && !error && records.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                아직 분석 기록이 없습니다.
+              </div>
+            )}
+
+            {/* 정상적으로 데이터를 불러왔을 때 */}
+            {!isLoading && !error && records.map((record) => (
               <div
-                key={index}
+                key={record.id} // 배열의 index 대신 고유 id를 사용하는 것이 성능상 좋습니다.
                 className="flex items-center justify-between p-6 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer"
                 onClick={() => handleViewDetail(record.date)}
               >
