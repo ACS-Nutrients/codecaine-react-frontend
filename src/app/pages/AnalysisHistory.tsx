@@ -53,9 +53,18 @@ export function AnalysisHistory() {
     fetchRecords();
   }, []);
 
-  const handleViewDetail = (date: string) => {
-    // 실제로는 date보다는 record의 id 값을 넘기는 것이 조회에 더 좋습니다.
-    // navigate(`/chatbot/${id}`);
+  const handleViewDetail = (recordId: number) => {
+    // 추천 결과 카드를 클릭하면 해당 결과 페이지로 이동
+    // 실제로는 recordId를 쿼리 파라미터나 state로 전달할 수 있습니다.
+    // navigate(`/recommendation-result?id=${recordId}`);
+    navigate('/recommendation-result');
+  };
+
+  const handleChatbotClick = (e: React.MouseEvent, recordId: number) => {
+    // 이벤트 버블링을 막아서 카드 클릭 이벤트가 발생하지 않도록 합니다.
+    e.stopPropagation();
+    // 상담하기 버튼을 클릭하면 챗봇 페이지로 이동
+    // navigate(`/chatbot?recordId=${recordId}`);
     navigate('/chatbot');
   };
 
@@ -99,13 +108,16 @@ export function AnalysisHistory() {
               <div
                 key={record.id} // 배열의 index 대신 고유 id를 사용하는 것이 성능상 좋습니다.
                 className="flex items-center justify-between p-6 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer"
-                onClick={() => handleViewDetail(record.date)}
+                onClick={() => handleViewDetail(record.id)}
               >
                 <div>
                   <p className="text-sm text-gray-500 mb-1">{record.date}</p>
                   <h3 className="text-lg font-medium text-gray-900">{record.title}</h3>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                <button 
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                  onClick={(e) => handleChatbotClick(e, record.id)}
+                >
                   <MessageSquare className="w-4 h-4" />
                   <span className="text-sm">상담하기</span>
                   <span className="text-gray-400">›</span>
