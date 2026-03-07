@@ -87,7 +87,7 @@ export function AnalysisHistory() {
             <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
               <MessageSquare className="w-5 h-5 text-gray-500" />
             </div>
-            <p className="text-gray-700 pt-2">홍길동님의 영양제 추천 분석 기록입니다.</p>
+            <p className="text-gray-700 pt-2">영양제 추천 분석 기록입니다.</p>
           </div>
 
           <div className="space-y-4">

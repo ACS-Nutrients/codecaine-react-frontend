@@ -39,55 +39,36 @@ export function MyPage() {
   // }, []);
   // =========================================================
 
-  const [supplements, setSupplements] = useState([
-    {
-      id: 1,
-      name: 'Omega-3 (EPA/DHA)',
-      icon: '🟠',
-      dosage: '1일 복용량: 1일 (1200mg)',
-      frequency: '복용 시간: 1일 1회 (아침)',
-      duration: '60정',
-      remaining: '60정',
-      progress: 73,
-      totalDays: 60,
-      purchaseDate: '2024.04.10',
-      expiryDate: '2024.05.10',
-      active: true,
-      nutritionImage: null as string | null,
-    },
-    {
-      id: 2,
-      name: 'Vitamin B Complex',
-      icon: '🟡',
-      dosage: '1일 복용량: 1일 (아침 식사 후)',
-      frequency: '복용 시간: 1일 (저녁)',
-      duration: '60정',
-      remaining: '60정',
-      progress: 65,
-      totalDays: 60,
-      purchaseDate: '2025.07.01',
-      active: true,
-      nutritionImage: null as string | null,
-    },
-    {
-      id: 3,
-      name: 'Vitamin C 1000mg',
-      icon: '🟠',
-      dosage: '1일 복용량: 1일 (1000mg)',
-      frequency: '복용 시간: 저녁(적녁)',
-      duration: '30정',
-      purchaseDate: '2024.04.05',
-      active: false,
-      nutritionImage: null as string | null,
-    },
-  ]);
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API: GET /api/supplements?cognito_id={cognito_id}
+  // 명세서: /API-SPEC.md #5
+  // =========================================================
+  const [supplements, setSupplements] = useState<any[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedSupplement, setSelectedSupplement] = useState<number | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
-  const [allergies, setAllergies] = useState(['땅콩', '새우']);
-  const [conditions, setConditions] = useState(['고혈압', '당뇨']);
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API: GET /api/user/profile?cognito_id={cognito_id}
+  // 명세서: /API-SPEC.md #20
+  // 
+  // 예시 응답:
+  // {
+  //   "cognito_id": "user-123",
+  //   "ans_birth_dt": "1990-01-10",
+  //   "ans_gender": 0,
+  //   "ans_height": 175.0,
+  //   "ans_weight": 72.0,
+  //   "ans_allergies": "땅콩,우유",
+  //   "ans_chron_diseases": "고혈압,당뇨",
+  //   "ans_current_conditions": "피로,수면부족"
+  // }
+  // =========================================================
+  const [allergies, setAllergies] = useState<string[]>([]);
+  const [conditions, setConditions] = useState<string[]>([]);
   
   // States for editing
   const [isEditingUser, setIsEditingUser] = useState(false);
@@ -99,11 +80,11 @@ export function MyPage() {
   const [newCondition, setNewCondition] = useState('');
   
   const [userInfo, setUserInfo] = useState({
-    birthdate: '1990-01-10',
-    gender: '남성',
-    phone: '010-1234-5678',
-    weight: '72',
-    height: '175',
+    birthdate: '',
+    gender: '',
+    phone: '',
+    weight: '',
+    height: '',
   });
   
   const [editedUserInfo, setEditedUserInfo] = useState(userInfo);

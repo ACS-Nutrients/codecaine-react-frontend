@@ -312,16 +312,12 @@ function StepHealth({ onConfirm, onBack }: { onConfirm: () => void; onBack: () =
   const [note, setNote] = useState('');
 
   const [examItems, setExamItems] = useState<ExamItem[]>([
-    { id: 1, name: '비타민 D', value: '18', unit: 'ng/mL', status: '부족', range: '30 - 100' },
-    { id: 2, name: '비타민 B12', value: '220', unit: 'pg/mL', status: '정상', range: '200 - 900' },
-    { id: 3, name: '철분 (Ferritin)', value: '45', unit: 'ng/mL', status: '정상', range: '30 - 200' },
-    { id: 4, name: '간 기능 (AST)', value: '22', unit: 'U/L', status: '정상', range: '10 - 40' },
+    // TODO: API에서 건강검진 데이터 가져오기
+    // API: GET /api/health-check?cognito_id={cognito_id}
   ]);
 
   const [meds, setMeds] = useState<MedItem[]>([
-    { id: 1, name: '고혈압 약', dose: '10mg', schedule: '1일 1회 (아침)' },
-    { id: 2, name: '콜레스테롤 약', dose: '20mg', schedule: '1일 1회 (저녁)' },
-    { id: 3, name: '위장 약', dose: '1정', schedule: '1일 2회 (아침/저녁)' },
+    // TODO: API에서 복용 중인 약 데이터 가져오기
   ]);
 
   const statusColor = (s: ExamItem['status']) =>

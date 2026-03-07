@@ -6,7 +6,7 @@ export function Chatbot() {
   const [messages, setMessages] = useState([
     {
       type: 'bot',
-      content: '홍길동님의 영양제 추천 분석 기록입니다.',
+      content: '영양제 추천 분석 기록입니다.',
       timestamp: '2026.02.10',
     },
     {
@@ -74,7 +74,7 @@ export function Chatbot() {
         <h1 className="text-xl font-bold text-gray-900">영양제 추천 결과</h1>
         <div className="flex items-center gap-3">
           <User className="w-5 h-5 text-gray-400" />
-          <span className="text-sm text-gray-600">홍길동님</span>
+          <span className="text-sm text-gray-600">{/* TODO: API에서 사용자 이름 가져오기 */}</span>
         </div>
       </header>
 

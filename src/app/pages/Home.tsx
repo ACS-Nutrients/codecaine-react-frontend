@@ -32,7 +32,7 @@ export function Home() {
       <header className="bg-white/80 backdrop-blur-sm border-b border-white/50 px-8 py-4 flex items-center justify-end">
         <div className="flex items-center gap-3">
           <User className="w-8 h-8 text-gray-400 bg-gray-200 rounded-full p-1.5" />
-          <span className="text-sm text-gray-600">hongi234@email.com</span>
+          <span className="text-sm text-gray-600">{/* TODO: API에서 사용자 이메일 가져오기 */}</span>
         </div>
       </header>
 

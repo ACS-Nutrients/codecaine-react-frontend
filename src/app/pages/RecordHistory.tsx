@@ -47,77 +47,29 @@ export function RecordHistory() {
   // }, [currentDate]);
   // =========================================================
 
-  // 스캔된 데이터로부터 자동 생성된 영양제 정보
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API: GET /api/intake/supplements?cognito_id={cognito_id}
+  // 명세서: /API-SPEC.md #13
+  // 
+  // 예시 응답:
+  // {
+  //   "supplements": [
+  //     {
+  //       "cognito_id": "user-123",
+  //       "itk_product_name": "Omega-3",
+  //       "itk_serving_amount": 2,
+  //       "itk_serving_per_day": 1,
+  //       "itk_daily_total_amount": 2,
+  //       "is_active": true,
+  //       "records": { "2024-04-01": 2, "2024-04-05": 1 }
+  //     }
+  //   ]
+  // }
+  // =========================================================
   const [supplements, setSupplements] = useState<Supplement[]>([
-    {
-      id: 1,
-      name: 'Omega-3',
-      color: 'bg-orange-400',
-      dailyLimit: 2,
-      records: {
-        '2024-04-01': 2,
-        '2024-04-05': 1,
-        '2024-04-10': 2,
-        '2024-04-15': 2,
-        '2024-04-19': 1,
-        '2024-04-22': 2,
-        '2024-04-26': 1,
-      },
-    },
-    {
-      id: 2,
-      name: '비타민 D',
-      color: 'bg-yellow-400',
-      dailyLimit: 1,
-      records: {
-        '2024-04-03': 1,
-        '2024-04-08': 1,
-        '2024-04-17': 1,
-        '2024-04-24': 1,
-        '2024-04-29': 1,
-      },
-    },
-    {
-      id: 3,
-      name: '멀티비타민',
-      color: 'bg-green-500',
-      dailyLimit: 3,
-      records: {
-        '2024-04-04': 2,
-        '2024-04-08': 3,
-        '2024-04-15': 1,
-        '2024-04-28': 2,
-      },
-    },
-    {
-      id: 4,
-      name: 'Vitamin C',
-      color: 'bg-red-400',
-      dailyLimit: 2,
-      records: {
-        '2024-04-02': 1,
-        '2024-04-10': 2,
-        '2024-04-18': 2,
-      },
-    },
-    {
-      id: 5,
-      name: '유산균',
-      color: 'bg-purple-400',
-      dailyLimit: 1,
-      records: {
-        '2024-04-05': 1,
-        '2024-04-12': 1,
-        '2024-04-20': 1,
-      },
-    },
-    {
-      id: 6,
-      name: '비타민 B Complex',
-      color: 'bg-blue-400',
-      dailyLimit: 2,
-      records: {
-        '2024-04-07': 1,
+    // TODO: API에서 영양제 섭취 기록 가져오기
+  ]);
         '2024-04-14': 2,
         '2024-04-21': 1,
       },
