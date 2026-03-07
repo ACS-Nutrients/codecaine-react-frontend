@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 type Supplement = {
@@ -12,6 +12,40 @@ type Supplement = {
 export function RecordHistory() {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 3)); // April 2024
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API 1: GET /api/supplements?cognito_id={cognito_id} - 영양제 목록
+  // API 2: GET /api/records?cognito_id={cognito_id}&year={year}&month={month} - 복용 기록
+  // API 3: POST /api/records - 복용 기록 추가/수정
+  // 명세서: /API-SPEC.md #5, #15, #16
+  // 
+  // 예시 코드:
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const cognitoId = 'user-cognito-id';
+  //     const year = currentDate.getFullYear();
+  //     const month = currentDate.getMonth() + 1;
+  //     
+  //     // 영양제 목록 조회
+  //     const suppRes = await fetch(`/api/supplements?cognito_id=${cognitoId}&is_active=true`);
+  //     const suppData = await suppRes.json();
+  //     
+  //     // 복용 기록 조회
+  //     const recordRes = await fetch(`/api/records?cognito_id=${cognitoId}&year=${year}&month=${month}`);
+  //     const recordData = await recordRes.json();
+  //     
+  //     // 데이터 매핑
+  //     setSupplements(suppData.supplements.map(item => ({
+  //       id: item.ans_current_id,
+  //       name: item.ans_product_name,
+  //       dailyLimit: item.ans_serving_per_day,
+  //       records: {} // recordData에서 매핑
+  //     })));
+  //   };
+  //   fetchData();
+  // }, [currentDate]);
+  // =========================================================
 
   // 스캔된 데이터로부터 자동 생성된 영양제 정보
   const [supplements, setSupplements] = useState<Supplement[]>([

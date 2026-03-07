@@ -26,11 +26,20 @@ export function AnalysisHistory() {
         setIsLoading(true);
         
         // =========================================================
-        // 🚨 나중에 Python 백엔드가 완성되면 아래 주석을 풀고 적용하세요.
-        // const response = await fetch('http://localhost:8000/api/analysis/history');
+        // 🔌 TODO: API 연동 필요
+        // API: GET /api/analysis/history?cognito_id={cognito_id}&limit=10&offset=0
+        // 명세서: /API-SPEC.md #10
+        // 
+        // 예시 코드:
+        // const cognitoId = 'user-cognito-id'; // 실제로는 인증 컨텍스트에서 가져옴
+        // const response = await fetch(`/api/analysis/history?cognito_id=${cognitoId}&limit=10`);
         // if (!response.ok) throw new Error('네트워크 응답이 좋지 않습니다.');
         // const data = await response.json();
-        // setRecords(data);
+        // setRecords(data.results.map(item => ({
+        //   id: item.result_id,
+        //   date: new Date(item.created_at).toLocaleDateString('ko-KR'),
+        //   title: item.summary_jsonb.title
+        // })));
         // =========================================================
 
         // 지금은 백엔드가 없으므로, 통신하는 '척' 1초 딜레이를 줍니다. (Mock API)

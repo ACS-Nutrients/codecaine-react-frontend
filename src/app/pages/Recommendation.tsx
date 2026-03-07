@@ -847,7 +847,34 @@ export function Recommendation() {
 
   const handlePurposeConfirm = () => {
     fadeTo('analyzing');
-    // 2.5초 후 추천 결과 페이지로 이동
+    
+    // =========================================================
+    // 🔌 TODO: API 연동 필요
+    // API: POST /api/analysis/calculate
+    // 명세서: /API-SPEC.md #11
+    // 
+    // 예시 코드:
+    // const requestData = {
+    //   cognito_id: 'user-cognito-id',
+    //   health_check_data: {
+    //     exam_date: examDate,
+    //     gender: gender === 'male' ? 0 : 1,
+    //     age: parseInt(age),
+    //     height: parseFloat(height),
+    //     weight: parseFloat(weight)
+    //   },
+    //   purposes: [...selectedPurposes, ...customPurposes]
+    // };
+    // const response = await fetch('/api/analysis/calculate', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(requestData)
+    // });
+    // const data = await response.json();
+    // navigate(`/recommendation-result?result_id=${data.result_id}`);
+    // =========================================================
+    
+    // 2.5초 후 추천 결과 페이지로 이동 (Mock)
     setTimeout(() => navigate('/recommendation-result'), 2800);
   };
 

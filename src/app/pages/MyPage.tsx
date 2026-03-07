@@ -1,8 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Bell, Share2, MoreVertical, X, Plus, Check, ScanLine, Upload, Image as ImageIcon } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
 
 export function MyPage() {
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API 1: GET /api/users/{cognito_id} - 사용자 정보 조회
+  // API 2: GET /api/supplements?cognito_id={cognito_id} - 영양제 목록 조회
+  // 명세서: /API-SPEC.md #3, #5
+  // 
+  // 예시 코드:
+  // const [userData, setUserData] = useState(null);
+  // const [isLoading, setIsLoading] = useState(true);
+  // 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const cognitoId = 'user-cognito-id';
+  //     
+  //     // 사용자 정보 조회
+  //     const userRes = await fetch(`/api/users/${cognitoId}`);
+  //     const userData = await userRes.json();
+  //     setUserData(userData);
+  //     
+  //     // 영양제 목록 조회
+  //     const suppRes = await fetch(`/api/supplements?cognito_id=${cognitoId}`);
+  //     const suppData = await suppRes.json();
+  //     setSupplements(suppData.supplements.map(item => ({
+  //       id: item.ans_current_id,
+  //       name: item.ans_product_name,
+  //       dosage: `1일 복용량: ${item.ans_daily_total_amount}정`,
+  //       active: item.ans_is_active,
+  //       // ... 나머지 매핑
+  //     })));
+  //     
+  //     setIsLoading(false);
+  //   };
+  //   fetchData();
+  // }, []);
+  // =========================================================
+
   const [supplements, setSupplements] = useState([
     {
       id: 1,

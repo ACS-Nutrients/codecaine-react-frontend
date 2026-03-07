@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, Smile, User } from 'lucide-react';
 
 export function Chatbot() {
@@ -14,6 +14,51 @@ export function Chatbot() {
       content: '이 분석 결과를 바탕으로 상담을 시작합니다',
     },
   ]);
+
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API 1: GET /api/chatbot/history?cognito_id={cognito_id} - 대화 히스토리
+  // API 2: POST /api/chatbot/message - 메시지 전송
+  // 명세서: /API-SPEC.md #17, #18
+  // 
+  // 예시 코드:
+  // useEffect(() => {
+  //   const fetchHistory = async () => {
+  //     const cognitoId = 'user-cognito-id';
+  //     const response = await fetch(`/api/chatbot/history?cognito_id=${cognitoId}&limit=50`);
+  //     const data = await response.json();
+  //     setMessages(data.messages);
+  //   };
+  //   fetchHistory();
+  // }, []);
+  // 
+  // const handleSend = async () => {
+  //   if (!message.trim()) return;
+  //   
+  //   // 사용자 메시지 추가
+  //   setMessages([...messages, { type: 'user', content: message }]);
+  //   setMessage('');
+  //   
+  //   // API 호출
+  //   const response = await fetch('/api/chatbot/message', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({
+  //       cognito_id: 'user-cognito-id',
+  //       message: message,
+  //       context: { result_id: 123 }
+  //     })
+  //   });
+  //   const data = await response.json();
+  //   
+  //   // 봇 응답 추가
+  //   setMessages(prev => [...prev, { 
+  //     type: 'bot', 
+  //     content: data.bot_message,
+  //     timestamp: data.timestamp
+  //   }]);
+  // };
+  // =========================================================
 
   const handleSend = () => {
     if (message.trim()) {
