@@ -127,14 +127,7 @@ export function RecommendationResult() {
                   </table>
                 </div>
 
-                <div className="flex gap-3 mt-4">
-                  <button className="px-4 py-3 rounded-2xl border-2 border-blue-200 bg-blue-50 text-blue-700 text-sm font-bold hover:bg-blue-100 transition-colors">
-                    원문 상세 보기 ›
-                  </button>
-                  <button className="px-4 py-3 rounded-2xl border-2 border-blue-200 bg-blue-50 text-blue-700 text-sm font-bold hover:bg-blue-100 transition-colors">
-                    데이터 갱신하기 ›
-                  </button>
-                </div>
+                {/* 버튼 제거 */}
               </section>
 
               {/* Section 2: Need Nutrient */}
@@ -187,11 +180,7 @@ export function RecommendationResult() {
                       </ul>
                     </div>
 
-                    <div className="flex gap-3 mt-4">
-                      <button className="px-5 py-3 rounded-2xl bg-gradient-to-b from-blue-400 to-blue-600 text-white font-bold shadow-lg shadow-blue-200 hover:from-blue-500 hover:to-blue-700 transition-all">
-                        섭취 계획 세우기 ›
-                      </button>
-                    </div>
+                    {/* 섭취 계획 세우기 버튼 제거 */}
                   </div>
                 </div>
               </section>
@@ -207,27 +196,14 @@ export function RecommendationResult() {
 
                 <div className="grid grid-cols-3 gap-4">
                   {[
-                    { name: '비타민C 1000mg (정)', meta: '1정/일 • 단일 성분', price: '₩ 12,900' },
-                    { name: '비타민C + 아연 콤플렉스', meta: '면역/회복 • 복합', price: '₩ 18,500' },
-                    { name: '리포좀 비타민C', meta: '흡수 고려 • 캡슐', price: '₩ 29,000' },
+                    { name: '비타민C 1000mg (정)', meta: '1정/일 • 단일 성분' },
+                    { name: '비타민C + 아연 콤플렉스', meta: '면역/회복 • 복합' },
+                    { name: '리포좀 비타민C', meta: '흡수 고려 • 캡슐' },
                   ].map((product, idx) => (
                     <div key={idx} className="bg-white/90 rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
-                      <div 
-                        className="h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-xs font-bold text-gray-400"
-                        style={{
-                          background: 'radial-gradient(circle at 30% 30%, rgba(226,232,240,0.8), rgba(241,245,249,1))'
-                        }}
-                      >
-                        상품 이미지
-                      </div>
+                      {/* 이미지, 가격, 담기 버튼 제거 */}
                       <p className="text-sm font-bold text-gray-900">{product.name}</p>
-                      <div className="text-xs text-gray-500 -mt-2">{product.meta}</div>
-                      <div className="flex items-center justify-between mt-auto pt-2">
-                        <div className="font-bold text-sm text-gray-900">{product.price}</div>
-                        <button className="px-3 py-2 rounded-xl bg-gradient-to-b from-blue-400 to-blue-600 text-white text-xs font-bold hover:from-blue-500 hover:to-blue-700 transition-all">
-                          담기
-                        </button>
-                      </div>
+                      <div className="text-xs text-gray-500">{product.meta}</div>
                     </div>
                   ))}
                 </div>

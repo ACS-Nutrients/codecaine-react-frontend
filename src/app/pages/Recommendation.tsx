@@ -9,10 +9,11 @@ import {
   Trash2,
   Plus,
   ChevronLeft,
+  X,
 } from 'lucide-react';
 import { MyPageEditModal } from '../components/MyPageEditModal';
 
-type Step = 'info' | 'consent' | 'health' | 'analyzing';
+type Step = 'info' | 'consent' | 'health' | 'purpose' | 'analyzing';
 type ConsentChoice = 'agree' | 'disagree';
 
 /* ─────────────────────────────── Portal Logo ─────────────────────────────── */
@@ -559,7 +560,204 @@ function StepHealth({ onConfirm, onBack }: { onConfirm: () => void; onBack: () =
   );
 }
 
-/* ─────────────────────── Step 4 — 분석 중 ───────────────────────────────── */
+/* ─────────────────────── Step 4 — 영양제 섭취 목적 ─────────────────────── */
+function StepPurpose({ onConfirm, onBack }: { onConfirm: () => void; onBack: () => void }) {
+  const [selectedPurposes, setSelectedPurposes] = useState<string[]>([]);
+  const [customPurposes, setCustomPurposes] = useState<string[]>([]);
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customInput, setCustomInput] = useState('');
+
+  const purposes = [
+    { id: 'health', label: '건강 유지', icon: '💪', description: '일상적인 건강 관리' },
+    { id: 'immunity', label: '면역력 강화', icon: '🛡️', description: '감기 예방 및 면역 증진' },
+    { id: 'energy', label: '에너지 증진', icon: '⚡', description: '활력 및 피로 회복' },
+    { id: 'beauty', label: '피부/모발 관리', icon: '✨', description: '미용 및 안티에이징' },
+    { id: 'bone', label: '뼈 건강', icon: '🦴', description: '골다공증 예방' },
+    { id: 'eye', label: '눈 건강', icon: '👁️', description: '시력 보호' },
+    { id: 'heart', label: '심혈관 건강', icon: '❤️', description: '혈압 및 콜레스테롤 관리' },
+    { id: 'brain', label: '두뇌 활동', icon: '🧠', description: '집중력 및 기억력 향상' },
+    { id: 'digestion', label: '소화 건강', icon: '🌿', description: '장 건강 및 유산균' },
+  ];
+
+  const togglePurpose = (id: string) => {
+    if (selectedPurposes.includes(id)) {
+      setSelectedPurposes(selectedPurposes.filter((p) => p !== id));
+    } else {
+      setSelectedPurposes([...selectedPurposes, id]);
+    }
+  };
+
+  const handleAddCustomPurpose = () => {
+    if (customInput.trim()) {
+      setCustomPurposes([...customPurposes, customInput.trim()]);
+      setCustomInput('');
+      setShowCustomInput(false);
+    }
+  };
+
+  const removeCustomPurpose = (index: number) => {
+    setCustomPurposes(customPurposes.filter((_, i) => i !== index));
+  };
+
+  const totalSelected = selectedPurposes.length + customPurposes.length;
+
+  return (
+    <div className="w-full max-w-4xl mx-auto">
+      {/* Page header */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-gray-900 mb-1" style={{ fontSize: '28px', fontWeight: 700 }}>
+            영양제 섭취 목적
+          </h1>
+          <p className="text-gray-500" style={{ fontSize: '14px' }}>
+            영양제를 먹는 주요 목적을 선택해주세요. 중복 선택이 가능합니다.
+          </p>
+        </div>
+        <StepIndicator current={2} />
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm p-8">
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {purposes.map((purpose) => {
+            const isSelected = selectedPurposes.includes(purpose.id);
+            return (
+              <button
+                key={purpose.id}
+                onClick={() => togglePurpose(purpose.id)}
+                className={`p-5 rounded-xl border-2 transition-all text-left ${
+                  isSelected
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">{purpose.icon}</span>
+                  {isSelected && (
+                    <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                  )}
+                </div>
+                <h3 className={`font-bold mb-1 ${isSelected ? 'text-blue-700' : 'text-gray-900'}`}>
+                  {purpose.label}
+                </h3>
+                <p className="text-xs text-gray-500">{purpose.description}</p>
+              </button>
+            );
+          })}
+
+          {/* 기타 버튼 */}
+          <button
+            onClick={() => setShowCustomInput(true)}
+            className="p-5 rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl">📝</span>
+              <Plus className="w-5 h-5 text-gray-400" />
+            </div>
+            <h3 className="font-bold mb-1 text-gray-900">기타</h3>
+            <p className="text-xs text-gray-500">직접 입력하기</p>
+          </button>
+        </div>
+
+        {/* 커스텀 입력 모달 */}
+        {showCustomInput && (
+          <div className="mb-6 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+            <div className="flex items-center gap-3 mb-2">
+              <h4 className="font-bold text-gray-900">기타 목적 입력</h4>
+              <button
+                onClick={() => {
+                  setShowCustomInput(false);
+                  setCustomInput('');
+                }}
+                className="ml-auto text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleAddCustomPurpose();
+                  }
+                }}
+                placeholder="예: 관절 건강, 갱년기 관리 등"
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                autoFocus
+              />
+              <button
+                onClick={handleAddCustomPurpose}
+                disabled={!customInput.trim()}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                  customInput.trim()
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                추가
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 커스텀 목적 목록 */}
+        {customPurposes.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {customPurposes.map((purpose, index) => (
+              <div
+                key={index}
+                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg"
+              >
+                <span className="text-sm text-blue-900 font-medium">{purpose}</span>
+                <button
+                  onClick={() => removeCustomPurpose(index)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {totalSelected > 0 && (
+          <div className="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <p className="text-sm text-blue-800">
+              <span className="font-bold">{totalSelected}개</span>의 목적이 선택되었습니다.
+            </p>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 px-6 py-3.5 rounded-xl border-2 border-gray-300 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            이전
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={totalSelected === 0}
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-medium transition-all ${
+              totalSelected === 0
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200'
+            }`}
+          >
+            다음으로
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────── Step 5 — 분석 중 ───────────────────────────────── */
 function StepAnalyzing() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -642,12 +840,18 @@ export function Recommendation() {
   };
 
   const handleHealthConfirm = () => {
+    fadeTo('purpose');
+  };
+
+  const handleHealthBack = () => fadeTo('consent');
+
+  const handlePurposeConfirm = () => {
     fadeTo('analyzing');
     // 2.5초 후 추천 결과 페이지로 이동
     setTimeout(() => navigate('/recommendation-result'), 2800);
   };
 
-  const handleHealthBack = () => fadeTo('consent');
+  const handlePurposeBack = () => fadeTo('health');
 
   /* ── modal ── */
   const handleOpenModal = () => {
@@ -697,6 +901,10 @@ export function Recommendation() {
 
         {step === 'health' && (
           <StepHealth onConfirm={handleHealthConfirm} onBack={handleHealthBack} />
+        )}
+
+        {step === 'purpose' && (
+          <StepPurpose onConfirm={handlePurposeConfirm} onBack={handlePurposeBack} />
         )}
 
         {step === 'analyzing' && <StepAnalyzing />}

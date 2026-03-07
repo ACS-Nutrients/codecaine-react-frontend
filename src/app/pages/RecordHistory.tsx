@@ -192,9 +192,9 @@ export function RecordHistory() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto flex gap-6">
+      <div className="max-w-7xl mx-auto">
         {/* Main Calendar Section */}
-        <div className={`bg-white rounded-2xl shadow-sm p-8 transition-all duration-300 ${selectedDate ? 'flex-1' : 'w-full max-w-5xl mx-auto'}`}>
+        <div className="bg-white rounded-2xl shadow-sm p-8 w-full max-w-5xl mx-auto relative">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               영양제 섭취 기록
@@ -227,88 +227,171 @@ export function RecordHistory() {
             </button>
           </div>
 
-          {/* Calendar */}
-          <div className="grid grid-cols-7 gap-2">
-            {['월', '화', '수', '목', '금', '토', '일'].map((day, index) => (
-              <div
-                key={day}
-                className={`text-center py-3 font-medium ${
-                  index === 6 ? 'text-red-500' : 'text-gray-600'
-                }`}
-              >
-                {day}
-              </div>
-            ))}
-
-            {/* Empty cells for days before month starts */}
-            {Array.from({
-              length: firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1,
-            }).map((_, index) => (
-              <div key={`empty-${index}`} className="aspect-square" />
-            ))}
-
-            {/* Calendar days */}
-            {Array.from({ length: daysInMonth }).map((_, index) => {
-              const day = index + 1;
-              const daySupplements = getSupplementsForDay(day);
-              const isToday = day === 24;
-              const dateKey = formatDateKey(
-                currentDate.getFullYear(),
-                currentDate.getMonth(),
-                day
-              );
-              const isSelected = selectedDate === dateKey;
-              
-              // 최대 3개만 캘린더에 표시
-              const displaySupplements = daySupplements.slice(0, 3);
-              const hasMore = daySupplements.length > 3;
-
-              return (
+          {/* Calendar wrapper for positioning */}
+          <div className="relative">
+            {/* Calendar */}
+            <div className="grid grid-cols-7 gap-2">
+              {['월', '화', '수', '목', '금', '토', '일'].map((day, index) => (
                 <div
                   key={day}
-                  onClick={() => handleDateClick(day)}
-                  className={`aspect-square border rounded-lg p-2 hover:bg-gray-50 cursor-pointer transition-colors ${
-                    isToday
-                      ? 'border-blue-500 border-2 bg-blue-50'
-                      : isSelected
-                      ? 'border-blue-400 border-2 bg-blue-50'
-                      : 'border-gray-200'
+                  className={`text-center py-3 font-medium ${
+                    index === 6 ? 'text-red-500' : 'text-gray-600'
                   }`}
                 >
+                  {day}
+                </div>
+              ))}
+
+              {/* Empty cells for days before month starts */}
+              {Array.from({
+                length: firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1,
+              }).map((_, index) => (
+                <div key={`empty-${index}`} className="aspect-square" />
+              ))}
+
+              {/* Calendar days */}
+              {Array.from({ length: daysInMonth }).map((_, index) => {
+                const day = index + 1;
+                const daySupplements = getSupplementsForDay(day);
+                const isToday = day === 24;
+                const dateKey = formatDateKey(
+                  currentDate.getFullYear(),
+                  currentDate.getMonth(),
+                  day
+                );
+                const isSelected = selectedDate === dateKey;
+                
+                // 최대 3개만 캘린더에 표시
+                const displaySupplements = daySupplements.slice(0, 3);
+                const hasMore = daySupplements.length > 3;
+
+                return (
                   <div
-                    className={`text-sm mb-1 ${
-                      isToday
-                        ? 'font-bold text-blue-600'
-                        : isSelected
-                        ? 'font-bold text-blue-500'
-                        : 'text-gray-700'
+                    key={day}
+                    onClick={() => handleDateClick(day)}
+                    className={`aspect-square border rounded-lg p-2 hover:bg-gray-50 cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'border-purple-500 border-2 bg-purple-50'
+                        : isToday
+                        ? 'border-blue-500 border-2 bg-blue-50'
+                        : 'border-gray-200'
                     }`}
                   >
-                    {day}
+                    <div
+                      className={`text-sm mb-1 ${
+                        isSelected
+                          ? 'font-bold text-purple-600'
+                          : isToday
+                          ? 'font-bold text-blue-600'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      {day}
+                    </div>
+                    <div className="space-y-1">
+                      {displaySupplements.map((supplement, idx) => (
+                        <div
+                          key={idx}
+                          className={`${supplement.color} text-white text-xs px-1.5 py-0.5 rounded flex items-center justify-between gap-1`}
+                        >
+                          <span className="truncate text-[10px]">
+                            {supplement.name}
+                          </span>
+                          <span className="text-[9px] font-bold opacity-90">
+                            {supplement.count}/{supplement.dailyLimit}
+                          </span>
+                        </div>
+                      ))}
+                      {hasMore && (
+                        <div className="text-[9px] text-gray-500 text-center font-medium">
+                          +{daySupplements.length - 3}개 더
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    {displaySupplements.map((supplement, idx) => (
-                      <div
-                        key={idx}
-                        className={`${supplement.color} text-white text-xs px-1.5 py-0.5 rounded flex items-center justify-between gap-1`}
-                      >
-                        <span className="truncate text-[10px]">
-                          {supplement.name}
-                        </span>
-                        <span className="text-[9px] font-bold opacity-90">
-                          {supplement.count}/{supplement.dailyLimit}
-                        </span>
-                      </div>
-                    ))}
-                    {hasMore && (
-                      <div className="text-[9px] text-gray-500 text-center font-medium">
-                        +{daySupplements.length - 3}개 더
-                      </div>
-                    )}
-                  </div>
+                );
+              })}
+            </div>
+
+            {/* Right Slide Panel for Selected Date - 달력과 같은 시작점에서 시작 */}
+            {selectedDate && (
+              <div className="absolute top-0 right-0 w-96 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 animate-slide-in-right border border-gray-200">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {currentDate.getFullYear()}년{' '}
+                    {monthNames[currentDate.getMonth()]}{' '}
+                    {parseInt(selectedDate.split('-')[2])}일
+                  </h3>
+                  <button
+                    onClick={() => setSelectedDate(null)}
+                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
                 </div>
-              );
-            })}
+
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-3">
+                    영양제 이름을 클릭하여 복용 횟수를 기록하세요
+                  </p>
+                </div>
+
+                <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
+                  {supplements.map((supplement) => {
+                    const count = getCountForDate(supplement.id, selectedDate);
+                    const isComplete = count >= supplement.dailyLimit;
+
+                    return (
+                      <button
+                        key={supplement.id}
+                        onClick={() =>
+                          !isComplete &&
+                          handleSupplementClick(supplement.id, selectedDate)
+                        }
+                        disabled={isComplete}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                          isComplete
+                            ? 'border-gray-300 bg-gray-200 cursor-not-allowed opacity-60'
+                            : count > 0
+                            ? 'border-blue-400 bg-blue-50 hover:bg-blue-100'
+                            : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-4 h-4 ${supplement.color} rounded-full`}
+                          ></div>
+                          <span
+                            className={`text-sm font-medium ${
+                              isComplete ? 'text-gray-500 line-through' : 'text-gray-700'
+                            }`}
+                          >
+                            {supplement.name}
+                          </span>
+                        </div>
+                        <div
+                          className={`text-base font-bold ${
+                            isComplete
+                              ? 'text-gray-500'
+                              : count > 0
+                              ? 'text-blue-600'
+                              : 'text-gray-400'
+                          }`}
+                        >
+                          {count}/{supplement.dailyLimit}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
+                    * 모든 횟수를 채운 영양제는 회색으로 표시되며 클릭할 수 없습니다.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Legend */}
@@ -333,86 +416,6 @@ export function RecordHistory() {
             </div>
           </div>
         </div>
-
-        {/* Right Slide Panel for Selected Date */}
-        {selectedDate && (
-          <div className="w-96 bg-white rounded-2xl shadow-lg p-6 animate-slide-in-right">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-900">
-                {currentDate.getFullYear()}년{' '}
-                {monthNames[currentDate.getMonth()]}{' '}
-                {parseInt(selectedDate.split('-')[2])}일
-              </h3>
-              <button
-                onClick={() => setSelectedDate(null)}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-3">
-                영양제 이름을 클릭하여 복용 횟수를 기록하세요
-              </p>
-            </div>
-
-            <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
-              {supplements.map((supplement) => {
-                const count = getCountForDate(supplement.id, selectedDate);
-                const isComplete = count >= supplement.dailyLimit;
-
-                return (
-                  <button
-                    key={supplement.id}
-                    onClick={() =>
-                      !isComplete &&
-                      handleSupplementClick(supplement.id, selectedDate)
-                    }
-                    disabled={isComplete}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                      isComplete
-                        ? 'border-gray-300 bg-gray-200 cursor-not-allowed opacity-60'
-                        : count > 0
-                        ? 'border-blue-400 bg-blue-50 hover:bg-blue-100'
-                        : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-4 h-4 ${supplement.color} rounded-full`}
-                      ></div>
-                      <span
-                        className={`text-sm font-medium ${
-                          isComplete ? 'text-gray-500 line-through' : 'text-gray-700'
-                        }`}
-                      >
-                        {supplement.name}
-                      </span>
-                    </div>
-                    <div
-                      className={`text-base font-bold ${
-                        isComplete
-                          ? 'text-gray-500'
-                          : count > 0
-                          ? 'text-blue-600'
-                          : 'text-gray-400'
-                      }`}
-                    >
-                      {count}/{supplement.dailyLimit}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-500">
-                * 모든 횟수를 채운 영양제는 회색으로 표시되며 클릭할 수 없습니다.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
       
       <style>{`
