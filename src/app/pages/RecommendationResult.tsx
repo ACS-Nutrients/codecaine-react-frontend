@@ -1,7 +1,39 @@
 import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
 
 export function RecommendationResult() {
   const navigate = useNavigate();
+
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API 1: GET /api/analysis/result/{result_id} - 분석 결과 상세
+  // API 2: GET /api/recommendations/{result_id} - 추천 영양제 목록
+  // 명세서: /API-SPEC.md #12, #14
+  // 
+  // 예시 코드:
+  // const [analysisData, setAnalysisData] = useState(null);
+  // const [recommendations, setRecommendations] = useState([]);
+  // const [isLoading, setIsLoading] = useState(true);
+  // 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const resultId = new URLSearchParams(window.location.search).get('result_id');
+  //     
+  //     // 분석 결과 조회
+  //     const analysisRes = await fetch(`/api/analysis/result/${resultId}`);
+  //     const analysisData = await analysisRes.json();
+  //     setAnalysisData(analysisData);
+  //     
+  //     // 추천 영양제 조회
+  //     const recRes = await fetch(`/api/recommendations/${resultId}`);
+  //     const recData = await recRes.json();
+  //     setRecommendations(recData.recommendations);
+  //     
+  //     setIsLoading(false);
+  //   };
+  //   fetchData();
+  // }, []);
+  // =========================================================
 
   return (
     <div className="min-h-screen bg-white">
@@ -151,7 +183,8 @@ export function RecommendationResult() {
                   </div>
                   <div className="flex-1">
                     <p className="text-2xl font-bold text-gray-900 mb-2">
-                      비타민 C <span className="text-blue-600">1000mg</span> 필요
+                      {/* TODO: API에서 부족 영양소 정보 가져오기 */}
+                      부족 영양소 <span className="text-blue-600">필요량</span>
                     </p>
                     <p className="text-sm text-gray-600 leading-relaxed mb-4">
                       건강검진(CODEF) 결과와 문진(피로/수면) 및 현재 복용 영양제 정보를 종합하여,
@@ -161,11 +194,8 @@ export function RecommendationResult() {
                     <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50/80 text-sm text-gray-800 leading-relaxed">
                       <div className="mb-3">
                         <span className="font-bold text-gray-600">요약:</span>{' '}
-                        현재 등록된 복용 영양제 기준으로 비타민 C 섭취량은{' '}
-                        <b className="text-blue-600 font-bold">0mg/day</b>로 추정되며,
-                        개인 상태(피로/회복) 및 검진 요약 지표를 반영한 목표 섭취량{' '}
-                        <b className="text-blue-600 font-bold">1000mg/day</b> 대비{' '}
-                        <b className="text-blue-600 font-bold">부족분 1000mg/day</b>가 계산되었습니다.
+                        현재 등록된 복용 영양제 기준으로 영양소 섭취량을 분석하여,
+                        개인 상태 및 검진 요약 지표를 반영한 목표 섭취량 대비 부족분을 계산했습니다.
                       </div>
 
                       <ul className="space-y-2 pl-4">
@@ -195,11 +225,8 @@ export function RecommendationResult() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { name: '비타민C 1000mg (정)', meta: '1정/일 • 단일 성분' },
-                    { name: '비타민C + 아연 콤플렉스', meta: '면역/회복 • 복합' },
-                    { name: '리포좀 비타민C', meta: '흡수 고려 • 캡슐' },
-                  ].map((product, idx) => (
+                  {/* TODO: API에서 추천 상품 데이터 가져오기 */}
+                  {[].map((product: any, idx: number) => (
                     <div key={idx} className="bg-white/90 rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
                       {/* 이미지, 가격, 담기 버튼 제거 */}
                       <p className="text-sm font-bold text-gray-900">{product.name}</p>

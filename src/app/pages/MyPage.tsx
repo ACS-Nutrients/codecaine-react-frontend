@@ -51,12 +51,12 @@ export function MyPage() {
 
   const [newAllergy, setNewAllergy] = useState('');
   const [newCondition, setNewCondition] = useState('');
-
   const [editedUserInfo, setEditedUserInfo] = useState({
     ans_birth_dt: '',
     ans_gender: '',
     ans_weight: '',
     ans_height: '',
+
   });
 
   async function loadData(cognitoId: string) {

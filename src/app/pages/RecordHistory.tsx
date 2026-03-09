@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 type Supplement = {
@@ -13,77 +13,63 @@ export function RecordHistory() {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 3)); // April 2024
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  // 스캔된 데이터로부터 자동 생성된 영양제 정보
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API 1: GET /api/supplements?cognito_id={cognito_id} - 영양제 목록
+  // API 2: GET /api/records?cognito_id={cognito_id}&year={year}&month={month} - 복용 기록
+  // API 3: POST /api/records - 복용 기록 추가/수정
+  // 명세서: /API-SPEC.md #5, #15, #16
+  // 
+  // 예시 코드:
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const cognitoId = 'user-cognito-id';
+  //     const year = currentDate.getFullYear();
+  //     const month = currentDate.getMonth() + 1;
+  //     
+  //     // 영양제 목록 조회
+  //     const suppRes = await fetch(`/api/supplements?cognito_id=${cognitoId}&is_active=true`);
+  //     const suppData = await suppRes.json();
+  //     
+  //     // 복용 기록 조회
+  //     const recordRes = await fetch(`/api/records?cognito_id=${cognitoId}&year=${year}&month=${month}`);
+  //     const recordData = await recordRes.json();
+  //     
+  //     // 데이터 매핑
+  //     setSupplements(suppData.supplements.map(item => ({
+  //       id: item.ans_current_id,
+  //       name: item.ans_product_name,
+  //       dailyLimit: item.ans_serving_per_day,
+  //       records: {} // recordData에서 매핑
+  //     })));
+  //   };
+  //   fetchData();
+  // }, [currentDate]);
+  // =========================================================
+
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API: GET /api/intake/supplements?cognito_id={cognito_id}
+  // 명세서: /API-SPEC.md #13
+  // 
+  // 예시 응답:
+  // {
+  //   "supplements": [
+  //     {
+  //       "cognito_id": "user-123",
+  //       "itk_product_name": "Omega-3",
+  //       "itk_serving_amount": 2,
+  //       "itk_serving_per_day": 1,
+  //       "itk_daily_total_amount": 2,
+  //       "is_active": true,
+  //       "records": { "2024-04-01": 2, "2024-04-05": 1 }
+  //     }
+  //   ]
+  // }
+  // =========================================================
   const [supplements, setSupplements] = useState<Supplement[]>([
-    {
-      id: 1,
-      name: 'Omega-3',
-      color: 'bg-orange-400',
-      dailyLimit: 2,
-      records: {
-        '2024-04-01': 2,
-        '2024-04-05': 1,
-        '2024-04-10': 2,
-        '2024-04-15': 2,
-        '2024-04-19': 1,
-        '2024-04-22': 2,
-        '2024-04-26': 1,
-      },
-    },
-    {
-      id: 2,
-      name: '비타민 D',
-      color: 'bg-yellow-400',
-      dailyLimit: 1,
-      records: {
-        '2024-04-03': 1,
-        '2024-04-08': 1,
-        '2024-04-17': 1,
-        '2024-04-24': 1,
-        '2024-04-29': 1,
-      },
-    },
-    {
-      id: 3,
-      name: '멀티비타민',
-      color: 'bg-green-500',
-      dailyLimit: 3,
-      records: {
-        '2024-04-04': 2,
-        '2024-04-08': 3,
-        '2024-04-15': 1,
-        '2024-04-28': 2,
-      },
-    },
-    {
-      id: 4,
-      name: 'Vitamin C',
-      color: 'bg-red-400',
-      dailyLimit: 2,
-      records: {
-        '2024-04-02': 1,
-        '2024-04-10': 2,
-        '2024-04-18': 2,
-      },
-    },
-    {
-      id: 5,
-      name: '유산균',
-      color: 'bg-purple-400',
-      dailyLimit: 1,
-      records: {
-        '2024-04-05': 1,
-        '2024-04-12': 1,
-        '2024-04-20': 1,
-      },
-    },
-    {
-      id: 6,
-      name: '비타민 B Complex',
-      color: 'bg-blue-400',
-      dailyLimit: 2,
-      records: {
-        '2024-04-07': 1,
+    // TODO: API에서 영양제 섭취 기록 가져오기
+  ]);
         '2024-04-14': 2,
         '2024-04-21': 1,
       },

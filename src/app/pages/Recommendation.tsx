@@ -312,16 +312,12 @@ function StepHealth({ onConfirm, onBack }: { onConfirm: () => void; onBack: () =
   const [note, setNote] = useState('');
 
   const [examItems, setExamItems] = useState<ExamItem[]>([
-    { id: 1, name: '비타민 D', value: '18', unit: 'ng/mL', status: '부족', range: '30 - 100' },
-    { id: 2, name: '비타민 B12', value: '220', unit: 'pg/mL', status: '정상', range: '200 - 900' },
-    { id: 3, name: '철분 (Ferritin)', value: '45', unit: 'ng/mL', status: '정상', range: '30 - 200' },
-    { id: 4, name: '간 기능 (AST)', value: '22', unit: 'U/L', status: '정상', range: '10 - 40' },
+    // TODO: API에서 건강검진 데이터 가져오기
+    // API: GET /api/health-check?cognito_id={cognito_id}
   ]);
 
   const [meds, setMeds] = useState<MedItem[]>([
-    { id: 1, name: '고혈압 약', dose: '10mg', schedule: '1일 1회 (아침)' },
-    { id: 2, name: '콜레스테롤 약', dose: '20mg', schedule: '1일 1회 (저녁)' },
-    { id: 3, name: '위장 약', dose: '1정', schedule: '1일 2회 (아침/저녁)' },
+    // TODO: API에서 복용 중인 약 데이터 가져오기
   ]);
 
   const statusColor = (s: ExamItem['status']) =>
@@ -847,7 +843,34 @@ export function Recommendation() {
 
   const handlePurposeConfirm = () => {
     fadeTo('analyzing');
-    // 2.5초 후 추천 결과 페이지로 이동
+    
+    // =========================================================
+    // 🔌 TODO: API 연동 필요
+    // API: POST /api/analysis/calculate
+    // 명세서: /API-SPEC.md #11
+    // 
+    // 예시 코드:
+    // const requestData = {
+    //   cognito_id: 'user-cognito-id',
+    //   health_check_data: {
+    //     exam_date: examDate,
+    //     gender: gender === 'male' ? 0 : 1,
+    //     age: parseInt(age),
+    //     height: parseFloat(height),
+    //     weight: parseFloat(weight)
+    //   },
+    //   purposes: [...selectedPurposes, ...customPurposes]
+    // };
+    // const response = await fetch('/api/analysis/calculate', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(requestData)
+    // });
+    // const data = await response.json();
+    // navigate(`/recommendation-result?result_id=${data.result_id}`);
+    // =========================================================
+    
+    // 2.5초 후 추천 결과 페이지로 이동 (Mock)
     setTimeout(() => navigate('/recommendation-result'), 2800);
   };
 

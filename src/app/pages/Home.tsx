@@ -1,14 +1,38 @@
 import { Link } from 'react-router';
 import { Calendar, Lightbulb, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export function Home() {
+  // =========================================================
+  // 🔌 TODO: API 연동 필요
+  // API: GET /api/dashboard?cognito_id={cognito_id}
+  // 명세서: /API-SPEC.md #19
+  // 
+  // 예시 코드:
+  // const [dashboardData, setDashboardData] = useState(null);
+  // 
+  // useEffect(() => {
+  //   const fetchDashboard = async () => {
+  //     const cognitoId = 'user-cognito-id';
+  //     const response = await fetch(`/api/dashboard?cognito_id=${cognitoId}`);
+  //     const data = await response.json();
+  //     setDashboardData(data);
+  //   };
+  //   fetchDashboard();
+  // }, []);
+  // 
+  // 사용 예시:
+  // - {dashboardData?.user.email} (사용자 이메일)
+  // - {dashboardData?.analysis_count}건 (분석 기록 개수)
+  // =========================================================
+
   return (
     <div className="min-h-screen">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-white/50 px-8 py-4 flex items-center justify-end">
         <div className="flex items-center gap-3">
           <User className="w-8 h-8 text-gray-400 bg-gray-200 rounded-full p-1.5" />
-          <span className="text-sm text-gray-600">hongi234@email.com</span>
+          <span className="text-sm text-gray-600">{/* TODO: API에서 사용자 이메일 가져오기 */}</span>
         </div>
       </header>
 
