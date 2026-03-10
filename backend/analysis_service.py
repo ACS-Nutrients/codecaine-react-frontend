@@ -5,7 +5,7 @@ import models
 from nutrient_calculator import calculate_nutrient_gaps
 from agent_service import call_llm_agent, call_recommendation_agent
 
-def start_analysis(db: Session, cognito_id: str, purpose: str, medications: List[str]) -> int:
+def start_analysis(db: Session, cognito_id: str, purpose: str, medications: List[str], health_check_data: Dict = None) -> int:
     """분석 시작"""
     
     # 1. 사용자 데이터 조회

@@ -1,10 +1,10 @@
 import { MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
+import { api, getCognitoId } from '../api';
 
-// 백엔드에서 받을 데이터의 타입을 미리 정의해 둡니다. (TypeScript 사용 시)
 interface RecordType {
-  id: number; // DB에서 내려주는 고유 ID가 있으면 리스트 렌더링에 좋습니다.
+  id: number;
   date: string;
   title: string;
 }
@@ -12,68 +12,39 @@ interface RecordType {
 export function AnalysisHistory() {
   const navigate = useNavigate();
 
-  // 1. 데이터를 저장할 상태 (초기값은 빈 배열)
   const [records, setRecords] = useState<RecordType[]>([]);
-  // 2. 로딩 상태를 관리할 상태
   const [isLoading, setIsLoading] = useState(true);
-  // 3. 에러 발생 시 처리할 상태
   const [error, setError] = useState<string | null>(null);
 
-  // 컴포넌트가 처음 화면에 나타날 때(mount) 백엔드에 데이터를 요청합니다.
   useEffect(() => {
     const fetchRecords = async () => {
       try {
         setIsLoading(true);
-        
-        // =========================================================
-        // 🔌 TODO: API 연동 필요
-        // API: GET /api/analysis/history?cognito_id={cognito_id}&limit=10&offset=0
-        // 명세서: /API-SPEC.md #10
-        // 
-        // 예시 코드:
-        // const cognitoId = 'user-cognito-id'; // 실제로는 인증 컨텍스트에서 가져옴
-        // const response = await fetch(`/api/analysis/history?cognito_id=${cognitoId}&limit=10`);
-        // if (!response.ok) throw new Error('네트워크 응답이 좋지 않습니다.');
-        // const data = await response.json();
-        // setRecords(data.results.map(item => ({
-        //   id: item.result_id,
-        //   date: new Date(item.created_at).toLocaleDateString('ko-KR'),
-        //   title: item.summary_jsonb.title
-        // })));
-        // =========================================================
-
-        // 지금은 백엔드가 없으므로, 통신하는 '척' 1초 딜레이를 줍니다. (Mock API)
-        setTimeout(() => {
-          const mockData = [
-            { id: 1, date: '2026.02.10', title: '영양제 추천 결과' },
-            { id: 2, date: '2026.02.05', title: '영양제 추천 결과' },
-            { id: 3, date: '2026.02.01', title: '영양제 추천 결과' },
-          ];
-          setRecords(mockData);
-          setIsLoading(false); // 데이터 로딩 완료
-        }, 1000);
-
+        const cognitoId = getCognitoId() || 'test-user';
+        const data = await api.getAnalysisHistory(cognitoId);
+        setRecords(
+          (data.results ?? []).map((item: any) => ({
+            id: item.result_id,
+            date: new Date(item.created_at).toLocaleDateString('ko-KR'),
+            title: item.summary?.purpose ?? '영양제 추천 결과',
+          }))
+        );
       } catch (err) {
         setError('데이터를 불러오는 데 실패했습니다.');
+      } finally {
         setIsLoading(false);
       }
     };
-
     fetchRecords();
   }, []);
 
   const handleViewDetail = (recordId: number) => {
-    // 추천 결과 카드를 클릭하면 해당 결과 페이지로 이동
-    // 실제로는 recordId를 쿼리 파라미터나 state로 전달할 수 있습니다.
-    // navigate(`/recommendation-result?id=${recordId}`);
-    navigate('/recommendation-result');
+    const cognitoId = getCognitoId() || 'test-user';
+    navigate(`/recommendation-result?result_id=${recordId}&cognito_id=${cognitoId}`);
   };
 
   const handleChatbotClick = (e: React.MouseEvent, recordId: number) => {
-    // 이벤트 버블링을 막아서 카드 클릭 이벤트가 발생하지 않도록 합니다.
     e.stopPropagation();
-    // 상담하기 버튼을 클릭하면 챗봇 페이지로 이동
-    // navigate(`/chatbot?recordId=${recordId}`);
     navigate('/chatbot');
   };
 

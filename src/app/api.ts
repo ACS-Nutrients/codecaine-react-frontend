@@ -81,4 +81,27 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ ans_is_active: isActive }),
     }),
+
+  // Analysis
+  startAnalysis: (data: {
+    cognito_id: string;
+    health_check_data?: {
+      exam_date?: string;
+      gender?: number;
+      age?: number;
+      height?: number;
+      weight?: number;
+    };
+    purposes?: string[];
+  }) =>
+    request("/analysis/calculate", { method: "POST", body: JSON.stringify(data) }),
+
+  getAnalysisResult: (resultId: number, cognitoId: string) =>
+    request(`/analysis/result/${resultId}?cognito_id=${cognitoId}`),
+
+  getRecommendations: (resultId: number, cognitoId: string) =>
+    request(`/recommendations/${resultId}?cognito_id=${cognitoId}`),
+
+  getAnalysisHistory: (cognitoId: string, limit = 10, offset = 0) =>
+    request(`/analysis/history?cognito_id=${cognitoId}&limit=${limit}&offset=${offset}`),
 };

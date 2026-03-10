@@ -1,11 +1,21 @@
 from pydantic import BaseModel
 from typing import Optional, Dict, List
-from datetime import date, datetime
+from datetime import datetime
 
-class AnalysisStartRequest(BaseModel):
+
+class HealthCheckData(BaseModel):
+    exam_date: Optional[str] = None
+    gender: Optional[int] = None
+    age: Optional[int] = None
+    height: Optional[float] = None
+    weight: Optional[float] = None
+
+
+class AnalysisCalculateRequest(BaseModel):
     cognito_id: str
-    purpose: str
-    medications: Optional[List[str]] = []
+    health_check_data: Optional[HealthCheckData] = None
+    purposes: Optional[List[str]] = []
+
 
 class NutrientGapResponse(BaseModel):
     nutrient_id: int
@@ -15,6 +25,7 @@ class NutrientGapResponse(BaseModel):
     current_amount: Optional[int] = None
     max_amount: Optional[int] = None
     gap_amount: Optional[int] = None
+
 
 class RecommendationResponse(BaseModel):
     rec_id: int
@@ -26,15 +37,17 @@ class RecommendationResponse(BaseModel):
     rank: int
     nutrients: Dict[str, int]
 
+
 class AnalysisResultResponse(BaseModel):
     result_id: int
     cognito_id: str
     status: str
     summary: Optional[Dict] = None
     nutrient_gaps: Optional[List[NutrientGapResponse]] = None
-    created_at: datetime
+    created_at: Optional[datetime] = None
+
 
 class AnalysisHistoryItem(BaseModel):
     result_id: int
-    created_at: datetime
+    created_at: Optional[datetime] = None
     summary: Optional[Dict] = None
