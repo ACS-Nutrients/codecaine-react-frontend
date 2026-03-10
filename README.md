@@ -1,175 +1,96 @@
-# My Make File
+# 마이페이지 프론트엔드 (source-frontend)
 
-React + Vite 기반의 모던 웹 애플리케이션입니다.
+영양제 추천 서비스(MSA)의 마이페이지 프론트엔드입니다.
+백엔드는 [codecaine-python-mypage](https://github.com/ACS-Nutrients/codecaine-python-mypage) 레포를 사용합니다.
 
-## 🚀 프로젝트 개요
+## 기술 스택
 
-이 프로젝트는 Figma 디자인을 기반으로 제작된 프론트엔드 애플리케이션으로, 사용자 친화적인 인터페이스와 다양한 기능을 제공합니다.
+| 구분 | 기술 |
+|------|------|
+| **프레임워크** | React 18, Vite 6, TypeScript |
+| **스타일링** | Tailwind CSS 4, Radix UI, Material-UI 7 |
+| **라우팅** | React Router 7 |
+| **아이콘** | Lucide React |
+| **차트** | Recharts |
+| **애니메이션** | Motion |
 
-### 주요 기능
-- 📊 분석 및 추천 시스템
-- 💬 챗봇 인터페이스
-- 📝 기록 관리
-- 👤 사용자 프로필 관리
-- ⚙️ 설정 관리
+## 실행 방법
 
-## 🛠️ 기술 스택
+### Docker (백엔드와 함께 실행 — 권장)
 
-### 프레임워크 & 라이브러리
-- **React** 18.3.1 - UI 라이브러리
-- **Vite** 6.3.5 - 빌드 도구
-- **React Router** 7.13.0 - 라우팅
-- **TypeScript** - 타입 안전성
+`codecaine-python-mypage` 레포의 docker-compose로 함께 실행됩니다.
 
-### UI & 스타일링
-- **Tailwind CSS** 4.1.12 - 유틸리티 CSS 프레임워크
-- **Radix UI** - 접근성 중심 UI 컴포넌트
-- **Material-UI** 7.3.5 - 머티리얼 디자인 컴포넌트
-- **Motion** 12.23.24 - 애니메이션 라이브러리
-- **Lucide React** - 아이콘 라이브러리
-
-### 상태 관리 & 폼
-- **React Hook Form** 7.55.0 - 폼 관리
-- **Class Variance Authority** - 조건부 스타일링
-
-### 기타 라이브러리
-- **Date-fns** - 날짜 처리
-- **Recharts** - 차트 라이브러리
-- **React DnD** - 드래그 앤 드롭
-- **Sonner** - 토스트 알림
-
-## 📁 프로젝트 구조
-
-```
-src/
-├── app/
-│   ├── components/          # 재사용 가능한 컴포넌트
-│   │   ├── ui/             # UI 컴포넌트 라이브러리 (shadcn/ui 기반)
-│   │   ├── figma/          # Figma 관련 컴포넌트
-│   │   ├── Layout.tsx      # 메인 레이아웃
-│   │   └── MyPageEditModal.tsx
-│   ├── pages/              # 페이지 컴포넌트
-│   │   ├── Home.tsx        # 홈 페이지
-│   │   ├── RecordHistory.tsx    # 기록 히스토리
-│   │   ├── Recommendation.tsx   # 추천 페이지
-│   │   ├── RecommendationResult.tsx
-│   │   ├── Chatbot.tsx     # 챗봇
-│   │   ├── MyPage.tsx      # 마이페이지
-│   │   ├── AnalysisHistory.tsx  # 분석 히스토리
-│   │   └── Settings.tsx    # 설정
-│   ├── App.tsx             # 메인 앱 컴포넌트
-│   └── routes.ts           # 라우팅 설정
-├── styles/                 # 스타일 파일
-│   ├── fonts.css
-│   ├── index.css
-│   ├── tailwind.css
-│   └── theme.css
-├── imports/                # 정적 파일
-└── main.tsx               # 애플리케이션 진입점
-```
-
-## 🚀 시작하기
-
-### 필수 요구사항
-- Node.js 16.x 이상
-- npm 또는 pnpm (권장)
-
-### 설치 및 실행
-
-1. **저장소 클론**
 ```bash
-git clone <repository-url>
-cd my-make-file
+# codecaine-python-mypage와 source-frontend가 같은 상위 디렉토리에 있어야 합니다
+cd codecaine-python-mypage
+docker compose up -d --build
 ```
 
-2. **의존성 설치**
+접속: http://localhost:5173
+
+### 로컬 단독 실행
+
 ```bash
-# npm 사용
 npm install
-
-# 또는 pnpm 사용 (권장)
-pnpm install
-```
-
-3. **개발 서버 실행**
-```bash
 npm run dev
-# 또는
-pnpm dev
 ```
 
-개발 서버가 실행되면 브라우저에서 `http://localhost:5173`으로 접속할 수 있습니다.
+백엔드(`localhost:8000`)가 별도로 실행 중이어야 합니다.
 
-4. **프로덕션 빌드**
-```bash
-npm run build
-# 또는
-pnpm build
-```
+## API 연동
 
-## 📱 주요 페이지
+Vite dev server가 `/api`, `/dev` 경로를 백엔드로 프록시합니다.
+
+| 환경 | 프록시 타겟 |
+|------|-----------|
+| 로컬 | `http://localhost:8000` |
+| Docker | `http://mypage-service:8000` (`VITE_API_URL` 환경변수) |
+
+## 주요 페이지
 
 | 경로 | 설명 |
 |------|------|
-| `/` | 홈 페이지 |
-| `/record` | 기록 히스토리 |
-| `/recommendation` | 추천 시스템 |
-| `/recommendation-result` | 추천 결과 |
+| `/` | 홈 |
+| `/my-page` | 마이페이지 (영양제 관리, 프로필 수정) |
+| `/record` | 복용 기록 |
+| `/recommendation` | 영양제 추천 |
 | `/chatbot` | AI 챗봇 |
-| `/my-page` | 사용자 프로필 |
 | `/analysis` | 분석 히스토리 |
-| `/settings` | 애플리케이션 설정 |
+| `/settings` | 설정 |
 
-## 🎨 디자인 시스템
+## 프로젝트 구조
 
-이 프로젝트는 일관된 디자인 시스템을 사용합니다:
-
-- **컬러 팔레트**: CSS 변수를 통한 테마 시스템
-- **타이포그래피**: 커스텀 폰트 및 Tailwind CSS 유틸리티
-- **컴포넌트**: Radix UI 기반의 접근성 중심 컴포넌트
-- **애니메이션**: Motion을 활용한 부드러운 전환 효과
-
-## 🔧 개발 가이드
-
-### 코드 스타일
-- TypeScript 사용 권장
-- 함수형 컴포넌트 및 React Hooks 사용
-- Tailwind CSS를 활용한 스타일링
-
-### 컴포넌트 구조
-```tsx
-// 예시: 페이지 컴포넌트
-export default function PageName() {
-  return (
-    <div className="container mx-auto p-4">
-      {/* 컴포넌트 내용 */}
-    </div>
-  );
-}
+```
+src/
+└── app/
+    ├── api.ts                    # API 클라이언트 (401 자동 재발급)
+    ├── App.tsx
+    ├── routes.ts
+    ├── components/
+    │   ├── ui/                   # shadcn/ui 기반 기본 컴포넌트
+    │   ├── Layout.tsx
+    │   ├── MyPageEditModal.tsx   # 내 정보 수정 모달
+    │   └── SupplementScanModal.tsx  # OCR 스캔 모달 (4단계)
+    └── pages/
+        ├── MyPage.tsx
+        ├── RecordHistory.tsx
+        ├── Recommendation.tsx
+        ├── Chatbot.tsx
+        └── ...
 ```
 
-## 📦 빌드 및 배포
+## OCR 스캔 기능
 
-### 빌드 최적화
-- Vite의 트리 쉐이킹 활용
-- 코드 스플리팅을 통한 번들 크기 최적화
-- 이미지 및 에셋 최적화
+`SupplementScanModal.tsx` — 영양제 성분표 사진을 업로드하면 AWS Textract로 분석 후 폼 자동 완성.
 
-### 배포
-빌드된 파일은 `dist/` 폴더에 생성되며, 정적 호스팅 서비스에 배포할 수 있습니다.
+| 단계 | 설명 |
+|------|------|
+| 1. upload | 이미지 업로드 (파일 선택 / 카메라 촬영) |
+| 2. loading | Textract 분석 중 |
+| 3. review | 파싱 결과 확인 및 수정 |
+| 4. done | 저장 완료 |
 
-## 🤝 기여하기
+## 인증 (개발 모드)
 
-1. 이 저장소를 포크합니다
-2. 새로운 기능 브랜치를 생성합니다 (`git checkout -b feature/amazing-feature`)
-3. 변경사항을 커밋합니다 (`git commit -m 'Add some amazing feature'`)
-4. 브랜치에 푸시합니다 (`git push origin feature/amazing-feature`)
-5. Pull Request를 생성합니다
-
-## 📄 라이선스
-
-이 프로젝트는 비공개 프로젝트입니다.
-
-## 📞 문의
-
-프로젝트에 대한 문의사항이 있으시면 이슈를 생성해 주세요.
+페이지 접속 시 `/dev/token/test-user-001`에서 JWT 자동 발급.
+토큰은 `localStorage`에 저장, 401 시 자동 재발급.
