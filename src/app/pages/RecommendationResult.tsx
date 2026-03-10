@@ -1,40 +1,39 @@
 import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
+import { api, getCognitoId } from '../api';
 
 export function RecommendationResult() {
   const navigate = useNavigate();
 
-  // =========================================================
-  // 🔌 TODO: API 연동 필요
-  // API 1: GET /api/analysis/result/{result_id} - 분석 결과 상세
-  // API 2: GET /api/recommendations/{result_id} - 추천 영양제 목록
-  // 명세서: /API-SPEC.md #12, #14
-  // 
-  // 예시 코드:
-  // const [analysisData, setAnalysisData] = useState(null);
-  // const [recommendations, setRecommendations] = useState([]);
-  // const [isLoading, setIsLoading] = useState(true);
-  // 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     const resultId = new URLSearchParams(window.location.search).get('result_id');
-  //     
-  //     // 분석 결과 조회
-  //     const analysisRes = await fetch(`/api/analysis/result/${resultId}`);
-  //     const analysisData = await analysisRes.json();
-  //     setAnalysisData(analysisData);
-  //     
-  //     // 추천 영양제 조회
-  //     const recRes = await fetch(`/api/recommendations/${resultId}`);
-  //     const recData = await recRes.json();
-  //     setRecommendations(recData.recommendations);
-  //     
-  //     setIsLoading(false);
-  //   };
-  //   fetchData();
-  // }, []);
-  // =========================================================
+  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const resultId = new URLSearchParams(window.location.search).get('result_id');
+        const cognitoId = getCognitoId() || 'test-user';
+
+        if (resultId) {
+          const [resultData, recData] = await Promise.all([
+            api.getAnalysisResult(Number(resultId), cognitoId),
+            api.getRecommendations(Number(resultId), cognitoId),
+          ]);
+          setAnalysisData(resultData);
+          setRecommendations(recData?.recommendations ?? []);
+        }
+      } catch (e) {
+        console.error('결과 조회 오류:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // (기존 TODO 주석 대체 — 연동 완료)
   return (
     <div className="min-h-screen bg-white">
       {/* Main */}
