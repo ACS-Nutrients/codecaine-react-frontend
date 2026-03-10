@@ -1,0 +1,9 @@
+
+> @figma/my-make-file@0.0.1 dev
+> vite
+
+'\\wsl.localhost\Ubuntu\home\ds10\workspace_pjt3\source-frontend'
+위의 경로를 현재 디렉터리로 하여 CMD.EXE가 실행되었습니다. UNC 경로는
+지원되지 않습니다. Windows 디렉터리를 기본으로 합니다.
+'vite'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는
+배치 파일이 아닙니다.
