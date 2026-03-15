@@ -3,13 +3,6 @@ import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
 import { api, getCognitoId } from '../api';
 
-interface AnalysisRecord {
-  result_id: number;
-  cognito_id: string;
-  summary_jsonb: { title: string; [key: string]: any };
-  created_at: string;
-}
-
 interface RecordType {
   id: number;
   date: string;
@@ -18,6 +11,7 @@ interface RecordType {
 
 export function AnalysisHistory() {
   const navigate = useNavigate();
+
   const [records, setRecords] = useState<RecordType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,35 +20,32 @@ export function AnalysisHistory() {
     const fetchRecords = async () => {
       try {
         setIsLoading(true);
-        const cognitoId = getCognitoId();
-        
-        if (!cognitoId) {
-          throw new Error('인증 정보가 없습니다.');
-        }
-
-        const data: { total: number; results: AnalysisRecord[] } = await api.getAnalysisHistory(cognitoId, 10, 0);
-        setRecords(data.results.map(item => ({
-          id: item.result_id,
-          date: new Date(item.created_at).toLocaleDateString('ko-KR'),
-          title: item.summary_jsonb.title
-        })));
-        setIsLoading(false);
+        const cognitoId = getCognitoId() || 'test-user';
+        const data = await api.getAnalysisHistory(cognitoId);
+        setRecords(
+          (data.results ?? []).map((item: any) => ({
+            id: item.result_id,
+            date: new Date(item.created_at).toLocaleDateString('ko-KR'),
+            title: item.summary?.purpose ?? '영양제 추천 결과',
+          }))
+        );
       } catch (err) {
         setError('데이터를 불러오는 데 실패했습니다.');
+      } finally {
         setIsLoading(false);
       }
     };
-
     fetchRecords();
   }, []);
 
   const handleViewDetail = (recordId: number) => {
-    navigate('/recommendation-result');
+    const cognitoId = getCognitoId() || 'test-user';
+    navigate(`/recommendation-result?result_id=${recordId}&cognito_id=${cognitoId}`);
   };
 
   const handleChatbotClick = (e: React.MouseEvent, recordId: number) => {
     e.stopPropagation();
-    navigate(`/chatbot?result_id=${recordId}`);
+    navigate('/chatbot');
   };
 
   return (
@@ -71,27 +62,31 @@ export function AnalysisHistory() {
           </div>
 
           <div className="space-y-4">
+            {/* 로딩 중일 때 보여줄 UI */}
             {isLoading && (
               <div className="text-center py-8 text-gray-500">
                 기록을 불러오는 중입니다...
               </div>
             )}
 
+            {/* 에러가 발생했을 때 보여줄 UI */}
             {error && (
               <div className="text-center py-8 text-red-500">
                 {error}
               </div>
             )}
 
+            {/* 로딩도 끝났고 에러도 없는데 데이터가 없을 때 */}
             {!isLoading && !error && records.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 아직 분석 기록이 없습니다.
               </div>
             )}
 
+            {/* 정상적으로 데이터를 불러왔을 때 */}
             {!isLoading && !error && records.map((record) => (
               <div
-                key={record.id}
+                key={record.id} // 배열의 index 대신 고유 id를 사용하는 것이 성능상 좋습니다.
                 className="flex items-center justify-between p-6 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer"
                 onClick={() => handleViewDetail(record.id)}
               >

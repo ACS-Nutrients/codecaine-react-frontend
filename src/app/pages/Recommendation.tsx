@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { api, getCognitoId } from '../api';
 import { useNavigate } from 'react-router';
 import {
   ChevronRight,
@@ -303,7 +304,10 @@ type MedItem = {
   schedule: string;
 };
 
-function StepHealth({ onConfirm, onBack }: { onConfirm: () => void; onBack: () => void }) {
+function StepHealth({ onConfirm, onBack }: {
+  onConfirm: (data: { gender: number; age: number; height: number; weight: number; exam_date: string }) => void;
+  onBack: () => void;
+}) {
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [age, setAge] = useState('38');
   const [height, setHeight] = useState('175');
@@ -542,7 +546,13 @@ function StepHealth({ onConfirm, onBack }: { onConfirm: () => void; onBack: () =
               이전
             </button>
             <button
-              onClick={onConfirm}
+              onClick={() => onConfirm({
+                gender: gender === 'male' ? 0 : 1,
+                age: parseInt(age) || 0,
+                height: parseFloat(height) || 0,
+                weight: parseFloat(weight) || 0,
+                exam_date: examDate,
+              })}
               className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
             >
               <CheckCircle2 className="w-4 h-4" />
@@ -557,7 +567,7 @@ function StepHealth({ onConfirm, onBack }: { onConfirm: () => void; onBack: () =
 }
 
 /* ─────────────────────── Step 4 — 영양제 섭취 목적 ─────────────────────── */
-function StepPurpose({ onConfirm, onBack }: { onConfirm: () => void; onBack: () => void }) {
+function StepPurpose({ onConfirm, onBack }: { onConfirm: (purposes: string[]) => void; onBack: () => void }) {
   const [selectedPurposes, setSelectedPurposes] = useState<string[]>([]);
   const [customPurposes, setCustomPurposes] = useState<string[]>([]);
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -736,7 +746,7 @@ function StepPurpose({ onConfirm, onBack }: { onConfirm: () => void; onBack: () 
             이전
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() => onConfirm([...selectedPurposes, ...customPurposes])}
             disabled={totalSelected === 0}
             className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-medium transition-all ${
               totalSelected === 0
@@ -802,11 +812,12 @@ export function Recommendation() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>('info');
-  const [visible, setVisible] = useState(true); // for fade transition
+  const [visible, setVisible] = useState(true);
   const [consentChoice, setConsentChoice] = useState<ConsentChoice>('agree');
   const [showModal, setShowModal] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const healthDataRef = useRef<{ gender: number; age: number; height: number; weight: number; exam_date: string } | null>(null);
 
   /* ── fade transition helper ── */
   const fadeTo = (nextStep: Step) => {
@@ -835,43 +846,28 @@ export function Recommendation() {
     }
   };
 
-  const handleHealthConfirm = () => {
+  const handleHealthConfirm = (data: { gender: number; age: number; height: number; weight: number; exam_date: string }) => {
+    healthDataRef.current = data;
     fadeTo('purpose');
   };
 
   const handleHealthBack = () => fadeTo('consent');
 
-  const handlePurposeConfirm = () => {
+  const handlePurposeConfirm = async (purposes: string[]) => {
     fadeTo('analyzing');
-    
-    // =========================================================
-    // 🔌 TODO: API 연동 필요
-    // API: POST /api/analysis/calculate
-    // 명세서: /API-SPEC.md #11
-    // 
-    // 예시 코드:
-    // const requestData = {
-    //   cognito_id: 'user-cognito-id',
-    //   health_check_data: {
-    //     exam_date: examDate,
-    //     gender: gender === 'male' ? 0 : 1,
-    //     age: parseInt(age),
-    //     height: parseFloat(height),
-    //     weight: parseFloat(weight)
-    //   },
-    //   purposes: [...selectedPurposes, ...customPurposes]
-    // };
-    // const response = await fetch('/api/analysis/calculate', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(requestData)
-    // });
-    // const data = await response.json();
-    // navigate(`/recommendation-result?result_id=${data.result_id}`);
-    // =========================================================
-    
-    // 2.5초 후 추천 결과 페이지로 이동 (Mock)
-    setTimeout(() => navigate('/recommendation-result'), 2800);
+    try {
+      const cognitoId = getCognitoId() || 'test-user';
+      const data = await api.startAnalysis({
+        cognito_id: cognitoId,
+        health_check_data: healthDataRef.current ?? undefined,
+        purposes,
+      });
+      navigate(`/recommendation-result?result_id=${data.result_id}`);
+    } catch (e) {
+      console.error('분석 오류:', e);
+      // 오류 시에도 결과 페이지로 이동 (mock fallback)
+      navigate('/recommendation-result');
+    }
   };
 
   const handlePurposeBack = () => fadeTo('health');

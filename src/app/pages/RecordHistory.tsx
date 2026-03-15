@@ -67,9 +67,7 @@ export function RecordHistory() {
   //   ]
   // }
   // =========================================================
-  const [supplements, setSupplements] = useState<Supplement[]>([
-    // TODO: API에서 영양제 섭취 기록 가져오기
-  ]);
+  const [supplements, setSupplements] = useState<Supplement[]>([]);
 
   const daysInMonth = new Date(
     currentDate.getFullYear(),

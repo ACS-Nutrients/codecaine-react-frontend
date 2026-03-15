@@ -28,6 +28,20 @@ export function clearAuth() {
   localStorage.removeItem("cognito_id");
 }
 
+async function requestFormData(path: string, formData: FormData) {
+  const headers: Record<string, string> = {};
+  if (_token) {
+    headers["Authorization"] = `Bearer ${_token}`;
+  }
+  const res = await fetch(`${API_BASE}${path}`, { method: "POST", body: formData, headers });
+  if (res.status === 401) { clearAuth(); throw new Error("401"); }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 async function request(path: string, options: RequestInit = {}) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -81,8 +95,16 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ ans_is_active: isActive }),
     }),
+  
+  scanSupplement: (imageFile: File, cognitoId: string) => {
+    const formData = new FormData();
+    formData.append("image", imageFile);
+    formData.append("cognito_id", cognitoId);
+    return requestFormData("/supplements/scan", formData);
+  },
+};
 
-  // Analysis
+
+// Analysis
   getAnalysisHistory: (cognitoId: string, limit = 10, offset = 0) =>
     request(`/chatbot/analysis/history?cognito_id=${cognitoId}&limit=${limit}&offset=${offset}`),
-};
