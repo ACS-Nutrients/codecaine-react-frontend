@@ -95,6 +95,7 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ ans_is_active: isActive }),
     }),
+  
   scanSupplement: (imageFile: File, cognitoId: string) => {
     const formData = new FormData();
     formData.append("image", imageFile);
@@ -102,3 +103,8 @@ export const api = {
     return requestFormData("/supplements/scan", formData);
   },
 };
+
+
+// Analysis
+  getAnalysisHistory: (cognitoId: string, limit = 10, offset = 0) =>
+    request(`/chatbot/analysis/history?cognito_id=${cognitoId}&limit=${limit}&offset=${offset}`),
