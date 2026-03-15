@@ -84,5 +84,5 @@ export const api = {
 
   // Analysis
   getAnalysisHistory: (cognitoId: string, limit = 10, offset = 0) =>
-    request(`/analysis/history?cognito_id=${cognitoId}&limit=${limit}&offset=${offset}`),
+    request(`/chatbot/analysis/history?cognito_id=${cognitoId}&limit=${limit}&offset=${offset}`),
 };
