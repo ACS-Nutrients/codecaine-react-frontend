@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, Bell, Share2, MoreVertical, X, Plus, ScanLine } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
-import { api, setToken, setCognitoId, getCognitoId, clearAuth } from '../api';
+import { api, getCognitoId } from '../api';
 import { SupplementScanModal } from '../components/SupplementScanModal';
-
-const DEV_COGNITO_ID = 'test-user-001';
+import { useAuth } from '../auth/AuthContext';
 
 interface Supplement {
   ans_current_id: number;
@@ -30,14 +29,8 @@ interface Profile {
 
 const ICONS = ['🟠', '🟡', '🟢', '🔵', '🟣'];
 
-async function fetchDevToken(): Promise<string> {
-  const tokenData = await api.getDevToken(DEV_COGNITO_ID);
-  setToken(tokenData.access_token);
-  setCognitoId(DEV_COGNITO_ID);
-  return DEV_COGNITO_ID;
-}
-
 export function MyPage() {
+  const { user } = useAuth();
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,29 +72,20 @@ export function MyPage() {
   useEffect(() => {
     async function init() {
       try {
-        let cognitoId = getCognitoId();
+        const cognitoId = user?.cognitoId ?? getCognitoId();
         if (!cognitoId) {
-          cognitoId = await fetchDevToken();
+          setError('로그인이 필요합니다.');
+          return;
         }
         await loadData(cognitoId);
       } catch (e: any) {
-        if (e.message === '401') {
-          // 토큰 만료 시 재발급 후 재시도
-          try {
-            const cognitoId = await fetchDevToken();
-            await loadData(cognitoId);
-          } catch (retryErr: any) {
-            setError(retryErr.message);
-          }
-        } else {
-          setError(e.message);
-        }
+        setError(e.message);
       } finally {
         setLoading(false);
       }
     }
     init();
-  }, []);
+  }, [user]);
 
   const toggleSupplement = async (id: number, currentActive: boolean) => {
     try {
@@ -343,13 +327,27 @@ export function MyPage() {
                     <div key={item.label} className="flex items-center gap-2">
                       <span className="text-gray-600 w-20">• {item.label}</span>
                       {isEditingUser && item.editKey ? (
-                        <input
-                          type={item.editKey === 'ans_gender' ? 'number' : 'text'}
-                          value={editedUserInfo[item.editKey as keyof typeof editedUserInfo]}
-                          onChange={(e) => setEditedUserInfo({ ...editedUserInfo, [item.editKey!]: e.target.value })}
-                          placeholder={item.editKey === 'ans_gender' ? '0=남성 1=여성' : ''}
-                          className="border border-gray-300 px-2 py-1 rounded flex-1"
-                        />
+                        item.editKey === 'ans_gender' ? (
+                          <div className="flex gap-2 flex-1">
+                            {[{ label: '남성', value: '0' }, { label: '여성', value: '1' }].map(opt => (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setEditedUserInfo({ ...editedUserInfo, ans_gender: opt.value })}
+                                className={`flex-1 py-1 rounded border text-sm ${editedUserInfo.ans_gender === opt.value ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 text-gray-700'}`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <input
+                            type={item.editKey === 'ans_birth_dt' ? 'date' : 'text'}
+                            value={editedUserInfo[item.editKey as keyof typeof editedUserInfo]}
+                            onChange={(e) => setEditedUserInfo({ ...editedUserInfo, [item.editKey!]: e.target.value })}
+                            className="border border-gray-300 px-2 py-1 rounded flex-1"
+                          />
+                        )
                       ) : (
                         <span className="text-gray-900">{item.value || '-'}</span>
                       )}
