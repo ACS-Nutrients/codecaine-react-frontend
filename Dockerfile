@@ -3,24 +3,16 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-
-# package-lock.json이 없으므로 npm install 사용
 RUN npm install
 
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine
+FROM nginx:alpine
 
-WORKDIR /app
-
-COPY package*.json ./
-
-# package-lock.json이 없으므로 npm install 사용
-RUN npm install --omit=dev
-
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 8080
 
-CMD ["npm", "start"]
+CMD ["nginx", "-g", "daemon off;"]

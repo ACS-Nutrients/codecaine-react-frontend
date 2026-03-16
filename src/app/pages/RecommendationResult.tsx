@@ -7,7 +7,7 @@ export function RecommendationResult() {
   // =========================================================
   // 🔌 TODO: API 연동 필요
   // API 1: GET /api/analysis/result/{result_id} - 분석 결과 상세
-  // API 2: GET /api/recommendations/{result_id} - 추천 영양제 목록
+  // API 2: GET /api/analysis/recommendations/{result_id} - 추천 영양제 목록
   // 명세서: /API-SPEC.md #12, #14
   // 
   // 예시 코드:
@@ -25,7 +25,7 @@ export function RecommendationResult() {
   //     setAnalysisData(analysisData);
   //     
   //     // 추천 영양제 조회
-  //     const recRes = await fetch(`/api/recommendations/${resultId}`);
+  //     const recRes = await fetch(`/api/analysis/recommendations/${resultId}`);
   //     const recData = await recRes.json();
   //     setRecommendations(recData.recommendations);
   //     

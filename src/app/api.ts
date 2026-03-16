@@ -78,31 +78,77 @@ export const api = {
   updateProfile: (cognitoId: string, data: any) =>
     request(`/users/${cognitoId}`, { method: "PUT", body: JSON.stringify(data) }),
 
-  // Supplements
+  // Supplements (mypage)
   getSupplements: (cognitoId: string, isActive?: boolean) => {
     const params = new URLSearchParams({ cognito_id: cognitoId });
     if (isActive !== undefined) params.set("is_active", String(isActive));
-    return request(`/supplements?${params}`);
+    return request(`/users/supplements?${params}`);
   },
   createSupplement: (data: any) =>
-    request("/supplements", { method: "POST", body: JSON.stringify(data) }),
+    request("/users/supplements", { method: "POST", body: JSON.stringify(data) }),
   updateSupplement: (id: number, data: any) =>
-    request(`/supplements/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    request(`/users/supplements/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteSupplement: (id: number) =>
-    request(`/supplements/${id}`, { method: "DELETE" }),
+    request(`/users/supplements/${id}`, { method: "DELETE" }),
   toggleSupplementStatus: (id: number, isActive: boolean) =>
-    request(`/supplements/${id}/status`, {
+    request(`/users/supplements/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ ans_is_active: isActive }),
     }),
-
-  // Analysis
-  getAnalysisHistory: (cognitoId: string, limit = 10, offset = 0) =>
-    request(`/analysis/history?cognito_id=${cognitoId}&limit=${limit}&offset=${offset}`),
   scanSupplement: (imageFile: File, cognitoId: string) => {
     const formData = new FormData();
     formData.append("image", imageFile);
     formData.append("cognito_id", cognitoId);
-    return requestFormData("/supplements/scan", formData);
+    return requestFormData("/users/supplements/scan", formData);
   },
+
+  // History
+  getIntakeSupplements: (cognitoId: string, isActive?: boolean) => {
+    const params = new URLSearchParams({ cognito_id: cognitoId });
+    if (isActive !== undefined) params.set("is_active", String(isActive));
+    return request(`/history/supplements?${params}`);
+  },
+  getRecords: (cognitoId: string, year: number, month: number) =>
+    request(`/history/records?cognito_id=${cognitoId}&year=${year}&month=${month}`),
+  upsertRecord: (cognitoId: string, currentId: number, date: string, takenCount: number) =>
+    request("/history/records", {
+      method: "POST",
+      body: JSON.stringify({ cognito_id: cognitoId, current_id: currentId, date, taken_count: takenCount }),
+    }),
+
+  // Analysis
+  getAnalysisHistory: (cognitoId: string, limit = 10, offset = 0) =>
+    request(`/chatbot/analysis/history?cognito_id=${cognitoId}&limit=${limit}&offset=${offset}`),
+  startAnalysis: (data: {
+    cognito_id: string;
+    health_check_data: { exam_date: string; gender: number; age: number; height: number; weight: number };
+    purposes: string[];
+  }) => request("/analysis/calculate", { method: "POST", body: JSON.stringify(data) }),
+  getAnalysisResult: (resultId: number, cognitoId: string) =>
+    request(`/analysis/result/${resultId}?cognito_id=${cognitoId}`),
+  getRecommendations: (resultId: number, cognitoId: string) =>
+    request(`/analysis/recommendations/${resultId}?cognito_id=${cognitoId}`),
+
+  // CODEF — 년도·날짜 범위는 백엔드에서 자동 계산하므로 프론트에서 전송 불필요
+  codefInit: (userInfo: {
+    user_name: string;
+    phone_no: string;
+    identity: string;
+    nhis_id: string;
+  }) => request("/analysis/codef/init", { method: "POST", body: JSON.stringify(userInfo) }),
+  codefFetch: (payload: {
+    cognito_id: string;
+    user_info: object;
+    health_check_two_way: object;
+    prescription_two_way: object;
+    token: string;
+    hc_start_year?: string;
+    hc_end_year?: string;
+    presc_start?: string;
+    presc_end?: string;
+  }) => request("/analysis/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
+
+  // S3에 저장된 건강 요약 데이터 조회 — 건강정보 입력 폼 자동 채움용
+  getHealthData: (cognitoId: string) =>
+    request(`/analysis/health-data/${cognitoId}`),
 };

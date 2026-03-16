@@ -193,8 +193,7 @@ export function MyPageEditModal({ isOpen, onClose, onSave }: MyPageEditModalProp
                 <h3 className="font-bold text-gray-900 mb-4">건강 정보</h3>
                 <div className="space-y-3">
                   {[
-                    { label: '생년월일', key: 'ans_birth_dt', type: 'text' },
-                    { label: '성별 (0=남 1=여)', key: 'ans_gender', type: 'number' },
+                    { label: '생년월일', key: 'ans_birth_dt', type: 'date' },
                     { label: '체중 (kg)', key: 'ans_weight', type: 'number' },
                     { label: '키 (cm)', key: 'ans_height', type: 'number' },
                   ].map((field) => (
@@ -208,6 +207,21 @@ export function MyPageEditModal({ isOpen, onClose, onSave }: MyPageEditModalProp
                       />
                     </div>
                   ))}
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-gray-600 w-32 flex-shrink-0">성별</label>
+                    <div className="flex gap-2 flex-1">
+                      {[{ label: '남성', value: '0' }, { label: '여성', value: '1' }].map(opt => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setUserInfo({ ...userInfo, ans_gender: opt.value })}
+                          className={`flex-1 py-2 rounded-lg border text-sm ${userInfo.ans_gender === opt.value ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 

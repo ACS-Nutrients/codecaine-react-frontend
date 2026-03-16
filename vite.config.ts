@@ -8,6 +8,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  define: {
+    global: 'globalThis',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -15,14 +18,17 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:8000',
-        changeOrigin: true,
-      },
-      '/dev': {
-        target: process.env.VITE_API_URL || 'http://localhost:8000',
-        changeOrigin: true,
-      },
+      // history service (:8004)
+      '/api/history':          { target: process.env.HISTORY_SERVICE_URL  || 'http://localhost:8004', changeOrigin: true },
+      // mypage service (:8003)
+      '/api/users':           { target: process.env.MYPAGE_SERVICE_URL   || 'http://localhost:8003', changeOrigin: true },
+      '/api/supplements':     { target: process.env.MYPAGE_SERVICE_URL   || 'http://localhost:8003', changeOrigin: true },
+      '/dev':                 { target: process.env.MYPAGE_SERVICE_URL   || 'http://localhost:8003', changeOrigin: true },
+      // chatbot service (:8002)
+      '/api/chatbot':         { target: process.env.CHATBOT_SERVICE_URL  || 'http://localhost:8002', changeOrigin: true },
+      '/api/auth':            { target: process.env.CHATBOT_SERVICE_URL  || 'http://localhost:8002', changeOrigin: true },
+      // analysis service (:8001)
+      '/api/analysis':        { target: process.env.ANALYSIS_SERVICE_URL || 'http://localhost:8001', changeOrigin: true },
     },
   },
   assetsInclude: ['**/*.svg', '**/*.csv'],

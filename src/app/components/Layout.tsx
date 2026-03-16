@@ -1,8 +1,11 @@
-import { Link, Outlet, useLocation } from 'react-router';
-import { Calendar, Lightbulb, User, FileText, Settings } from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router';
+import { Calendar, Lightbulb, User, FileText, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '../auth/AuthContext';
 
 export function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const menuItems = [
     { path: '/recommendation', icon: Lightbulb, label: '분석하기' },
@@ -11,6 +14,11 @@ export function Layout() {
     { path: '/analysis-history', icon: FileText, label: '분석 리포트' },
     { path: '/settings', icon: Settings, label: '설정' },
   ];
+
+  function handleLogout() {
+    logout();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100">
@@ -29,7 +37,6 @@ export function Layout() {
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
-            
             return (
               <Link
                 key={item.path}
@@ -46,6 +53,23 @@ export function Layout() {
             );
           })}
         </nav>
+
+        {/* 하단 유저 정보 + 로그아웃 */}
+        <div className="px-4 pb-6 border-t border-gray-100 pt-4">
+          <div className="px-2 mb-3">
+            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+            {user?.name && (
+              <p className="text-sm font-medium text-gray-700 truncate">{user.name}</p>
+            )}
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-2.5 w-full rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>로그아웃</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
