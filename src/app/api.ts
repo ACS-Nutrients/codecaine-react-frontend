@@ -148,7 +148,7 @@ export const api = {
     phone_no: string;
     identity: string;
     nhis_id: string;
-  }) => request("/analysis/codef/init", { method: "POST", body: JSON.stringify(userInfo) }),
+  }) => request("/codef/init", { method: "POST", body: JSON.stringify(userInfo) }),
   codefFetch: (payload: {
     cognito_id: string;
     user_info: object;
@@ -159,7 +159,7 @@ export const api = {
     hc_end_year?: string;
     presc_start?: string;
     presc_end?: string;
-  }) => request("/analysis/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
+  }) => request("/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
 
   // Chatbot
   getChatHistory: (resultId: string, cognitoId: string) =>
@@ -170,5 +170,5 @@ export const api = {
       body: JSON.stringify({ cognito_id: cognitoId, result_id: resultId, message }),
     }),
   getHealthData: (cognitoId: string) =>
-    request(`/analysis/health-data/${cognitoId}`),
+    request(`/codef/health-data/${cognitoId}`),
 };

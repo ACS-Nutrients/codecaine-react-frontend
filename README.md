@@ -1,6 +1,7 @@
 # Frontend
 
 React + Vite 기반 SPA. AWS Cognito 인증을 사용하며, 개발 환경에서 Vite 프록시가 API Gateway 역할을 한다.
+프로덕션 빌드 시 nginx가 정적 파일을 서빙하고 `/api`, `/dev` 요청을 백엔드로 프록시한다.
 
 ---
 
@@ -21,20 +22,28 @@ React + Vite 기반 SPA. AWS Cognito 인증을 사용하며, 개발 환경에서
 
 ## 실행
 
+### 개발 서버 (Vite)
+
 ```bash
-# 의존성 설치
 npm install
-
-# 환경변수 설정
-cp .env.example .env
-# .env에 Cognito 값 입력
-
-# 개발 서버 시작
+cp .env.example .env   # Cognito 값 입력
 npm run dev
 # → http://localhost:5173
 ```
 
-백엔드 4개 서비스가 함께 실행 중이어야 한다 (analysis :8001, chatbot :8002, mypage :8003, history :8004).
+백엔드 서비스가 함께 실행 중이어야 한다 (기본 포트: mypage :8003, history :8004, analysis :8001, chatbot :8002).
+
+### Docker (mypage 서비스와 통합)
+
+`codecaine-python-mypage/docker-compose.yml`에서 프론트엔드를 함께 빌드한다.
+
+```bash
+cd ../codecaine-python-mypage
+docker compose up --build
+# → http://localhost:5173 (nginx 서빙)
+```
+
+빌드 시 `VITE_COGNITO_*` 값이 번들에 포함되어야 하므로 docker-compose의 `build.args`에 Cognito 값이 지정되어 있어야 한다.
 
 ---
 
@@ -46,6 +55,8 @@ VITE_COGNITO_CLIENT_ID=<Cognito App Client ID>
 ```
 
 `VITE_` prefix가 붙어야 Vite 빌드 시 번들에 포함된다.
+
+> **Docker 빌드 주의** 환경변수는 런타임이 아닌 **빌드 타임**에 번들에 삽입된다. Dockerfile의 `ARG`/`ENV`와 docker-compose의 `build.args`를 통해 전달한다. 값이 없으면 Cognito 초기화 실패로 흰 화면이 표시된다.
 
 ---
 
@@ -74,7 +85,7 @@ src/
         ├── Home.tsx
         ├── MyPage.tsx
         ├── RecordHistory.tsx
-        ├── Recommendation.tsx
+        ├── Recommendation.tsx       # CODEF 건강검진 + 영양제 추천 입력
         ├── RecommendationResult.tsx
         ├── Chatbot.tsx
         ├── AnalysisHistory.tsx
@@ -101,7 +112,7 @@ src/
 | `/` | 홈 | - |
 | `/my-page` | 내 정보 + 영양제 관리 | mypage |
 | `/record` | 복용 기록 | history |
-| `/recommendation` | 영양제 추천 입력 (CODEF 건강검진 포함) | analysis |
+| `/recommendation` | 영양제 추천 입력 (CODEF 건강검진 포함) | mypage, analysis |
 | `/recommendation-result` | 추천 결과 | analysis |
 | `/chatbot` | AI 챗봇 | chatbot |
 | `/analysis-history` | 분석 리포트 내역 | chatbot |
@@ -109,18 +120,32 @@ src/
 
 ---
 
-## API 프록시 (Vite 개발 서버)
+## API 프록시
 
-`vite.config.ts`에서 URL prefix 기준으로 각 백엔드 서비스로 프록시한다.
+### 개발 서버 (Vite, `vite.config.ts`)
 
-| URL prefix | 타겟 서비스 | 포트 |
-|------------|------------|------|
-| `/api/history` | history | 8004 |
-| `/api/users`, `/dev` | mypage | 8003 |
-| `/api/analysis/history`, `/api/chatbot`, `/api/auth` | chatbot | 8002 |
-| `/api/analysis`, `/api/recommendations` | analysis | 8001 |
+환경변수로 각 서비스 URL을 오버라이드할 수 있다.
 
-> **주의**: `/api/analysis/history`는 `/api/analysis`보다 먼저 등록되어야 chatbot으로 올바르게 라우팅된다.
+| URL prefix | 환경변수 | 기본 타겟 |
+|------------|----------|-----------|
+| `/api/history` | `HISTORY_SERVICE_URL` | http://localhost:8004 |
+| `/api/users`, `/api/supplements`, `/dev` | `MYPAGE_SERVICE_URL` | http://localhost:8003 |
+| `/api/chatbot`, `/api/auth` | `CHATBOT_SERVICE_URL` | http://localhost:8002 |
+| `/api/analysis` | `ANALYSIS_SERVICE_URL` | http://localhost:8001 |
+| `/api/codef` | `MYPAGE_SERVICE_URL` | http://localhost:8003 |
+
+### 프로덕션 (nginx, `nginx.conf`)
+
+nginx가 정적 파일 서빙과 API 프록시를 동시에 처리한다.
+
+| location | 타겟 | 설명 |
+|----------|------|------|
+| `/api/codef` | mypage-service:8000 | CODEF 건강검진 (더 구체적이므로 `/api` 앞에 위치) |
+| `/api` | mypage-service:8000 | 나머지 API 전체 |
+| `/dev` | mypage-service:8000 | 개발용 토큰 발급 |
+| `/` | dist/ | SPA — 모든 경로를 index.html로 |
+
+> **nginx location 순서** `/api/codef`가 `/api`보다 앞에 위치해야 올바르게 라우팅된다.
 
 ---
 
@@ -130,7 +155,7 @@ src/
 1. 로그인 (/login) → Cognito signIn() → IdToken 획득
 2. AuthContext에 user 정보 저장 (cognito_id, email)
 3. api.ts → 모든 요청에 Authorization: Bearer <IdToken> 자동 주입
-4. 401 응답 시 로그아웃 처리
+4. 401 응답 시 clearAuth() 호출 후 로그아웃 처리
 5. 앱 재진입 시 getCurrentSession()으로 세션 복구
 ```
 
@@ -151,17 +176,25 @@ src/
 
 ## CODEF 건강검진 연동 흐름 (`Recommendation.tsx`)
 
+CODEF API는 mypage 서비스(`/api/codef`)를 통해 호출된다.
+
 ```
-1. 사용자가 이름/전화번호/생년월일/주민등록번호 입력
+1. 사용자가 이름 / 전화번호 / 생년월일 / 주민등록번호 입력
    (주민등록번호는 브라우저에서 SHA-256 해시 후 즉시 폐기)
-2. POST /api/analysis/codef/init
-   → 백엔드가 최근 5년 범위로 CODEF에 건강검진 조회 요청
-   → 카카오톡으로 인증 알림 발송
+
+2. POST /api/codef/init
+   → 백엔드가 최근 5년 범위로 건강검진 + 처방기록 카카오 인증 요청 전송
+   → 응답: health_check_two_way, prescription_two_way, token, 연도 범위
+
 3. 사용자가 카카오톡 인증 승인 후 버튼 클릭
-4. POST /api/analysis/codef/fetch
-   → 실제 건강검진 데이터 수신
-   → 가장 최신 검진 결과를 자동 선택하여 폼 자동 채움
+
+4. POST /api/codef/fetch
+   → 실제 건강검진 / 처방기록 데이터 수신
+   → 가장 최신 검진 결과(연도 내림차순)를 자동 선택하여 폼 자동 채움
+   → 원본 데이터는 S3에 저장, 건강 요약은 GET /api/codef/health-data/{cognito_id}로 재조회
 ```
+
+> **주의** `codefFetch` 호출 시 `init` 응답의 연도 범위(`hc_start_year`, `hc_end_year`, `presc_start`, `presc_end`)를 그대로 전달해야 한다. 2-way 인증은 초기 요청과 동일한 파라미터를 요구한다.
 
 ---
 
@@ -185,4 +218,23 @@ npm run build
 # dist/ 폴더에 정적 파일 생성
 ```
 
-프로덕션 배포 시 Nginx 등으로 `dist/`를 서빙하고, API 프록시는 Nginx 또는 별도 API Gateway로 대체해야 한다.
+프로덕션 배포 시 Dockerfile이 `dist/`를 nginx 이미지에 복사하고 `nginx.conf`를 적용한다.
+
+---
+
+## 트러블슈팅
+
+### Docker 빌드 시 `vite: not found`
+
+**원인**: Windows `node_modules`가 `COPY . .`로 컨테이너에 복사되어 Linux 바이너리를 덮어씀.
+**해결**: `.dockerignore`에 `node_modules`, `dist`, `.vite` 추가.
+
+### 흰 화면 (Cognito 초기화 실패)
+
+**원인**: `VITE_COGNITO_*` 환경변수가 빌드 타임에 전달되지 않아 `undefined`로 번들링됨.
+**해결**: `Dockerfile`의 `ARG`/`ENV`와 docker-compose `build.args`에 실제 Cognito 값 지정.
+
+### Vite 프록시에서 `/api/codef` 요청이 analysis 서비스로 라우팅됨
+
+**원인**: `vite.config.ts`의 `/api/analysis` 프록시가 `/api/codef` 경로보다 먼저 매칭될 수 있음.
+**해결**: `/api/codef`를 명시적으로 `MYPAGE_SERVICE_URL`로 추가하거나, mypage 단일 서비스 환경에서는 `/api` 전체를 mypage로 향하게 조정.
