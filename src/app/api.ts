@@ -1,3 +1,5 @@
+import { getCurrentSession } from './auth/cognito';
+
 const API_BASE = "/api";
 
 let _token: string | null = localStorage.getItem("access_token");
@@ -28,10 +30,20 @@ export function clearAuth() {
   localStorage.removeItem("cognito_id");
 }
 
+// 매 요청 전 Cognito 세션에서 유효한 토큰 확보
+async function getFreshToken(): Promise<string | null> {
+  const session = await getCurrentSession();
+  if (!session) return null;
+  const token = session.getIdToken().getJwtToken();
+  setToken(token);
+  return token;
+}
+
 async function requestFormData(path: string, formData: FormData) {
+  const token = await getFreshToken();
   const headers: Record<string, string> = {};
-  if (_token) {
-    headers["Authorization"] = `Bearer ${_token}`;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
   const res = await fetch(`${API_BASE}${path}`, { method: "POST", body: formData, headers });
   if (res.status === 401) { clearAuth(); throw new Error("401"); }
@@ -43,12 +55,13 @@ async function requestFormData(path: string, formData: FormData) {
 }
 
 async function request(path: string, options: RequestInit = {}) {
+  const token = await getFreshToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-  if (_token) {
-    headers["Authorization"] = `Bearer ${_token}`;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
@@ -148,7 +161,14 @@ export const api = {
     presc_end?: string;
   }) => request("/analysis/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
 
-  // S3에 저장된 건강 요약 데이터 조회 — 건강정보 입력 폼 자동 채움용
+  // Chatbot
+  getChatHistory: (resultId: string, cognitoId: string) =>
+    request(`/chatbot/history/${resultId}?cognito_id=${cognitoId}`),
+  sendChatMessage: (cognitoId: string, resultId: string, message: string) =>
+    request("/chatbot/message", {
+      method: "POST",
+      body: JSON.stringify({ cognito_id: cognitoId, result_id: resultId, message }),
+    }),
   getHealthData: (cognitoId: string) =>
     request(`/analysis/health-data/${cognitoId}`),
 };
