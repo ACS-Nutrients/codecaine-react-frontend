@@ -135,7 +135,7 @@ export const api = {
     phone_no: string;
     identity: string;
     nhis_id: string;
-  }) => request("/analysis/codef/init", { method: "POST", body: JSON.stringify(userInfo) }),
+  }) => request("/codef/init", { method: "POST", body: JSON.stringify(userInfo) }),
   codefFetch: (payload: {
     cognito_id: string;
     user_info: object;
@@ -146,9 +146,9 @@ export const api = {
     hc_end_year?: string;
     presc_start?: string;
     presc_end?: string;
-  }) => request("/analysis/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
+  }) => request("/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
 
   // S3에 저장된 건강 요약 데이터 조회 — 건강정보 입력 폼 자동 채움용
   getHealthData: (cognitoId: string) =>
-    request(`/analysis/health-data/${cognitoId}`),
+    request(`/codef/health-data/${cognitoId}`),
 };
