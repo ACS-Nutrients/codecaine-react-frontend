@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, Bell, Share2, MoreVertical, X, Plus, ScanLine } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
-import { api, getCognitoId } from '../api';
+import { api, getCognitoId, clearAuth } from '../api';
 import { SupplementScanModal } from '../components/SupplementScanModal';
 import { useAuth } from '../auth/AuthContext';
 
