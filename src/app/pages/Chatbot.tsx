@@ -46,7 +46,10 @@ export function Chatbot() {
 
     try {
       const cognitoId = getCognitoId();
-      if (!cognitoId) return;
+      if (!cognitoId) {
+        setIsLoading(false);
+        return;
+      }
 
       const data: { bot_message: string; timestamp: string } = await api.sendChatMessage(cognitoId, resultId, userMessage);
       setMessages(prev => [...prev, {

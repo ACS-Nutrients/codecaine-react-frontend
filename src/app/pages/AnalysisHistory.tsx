@@ -6,7 +6,7 @@ import { api, getCognitoId } from '../api';
 interface AnalysisRecord {
   result_id: number;
   cognito_id: string;
-  summary_jsonb: { title: string; [key: string]: any };
+  summary_jsonb: { title: string;[key: string]: any };
   created_at: string;
 }
 
@@ -27,7 +27,7 @@ export function AnalysisHistory() {
       try {
         setIsLoading(true);
         const cognitoId = getCognitoId();
-        
+
         if (!cognitoId) {
           throw new Error('인증 정보가 없습니다.');
         }
@@ -49,7 +49,7 @@ export function AnalysisHistory() {
   }, []);
 
   const handleViewDetail = (recordId: number) => {
-    navigate('/recommendation-result');
+    navigate(`/recommendation-result?result_id=${recordId}`);
   };
 
   const handleChatbotClick = (e: React.MouseEvent, recordId: number) => {
@@ -99,7 +99,7 @@ export function AnalysisHistory() {
                   <p className="text-sm text-gray-500 mb-1">{record.date}</p>
                   <h3 className="text-lg font-medium text-gray-900">{record.title}</h3>
                 </div>
-                <button 
+                <button
                   className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
                   onClick={(e) => handleChatbotClick(e, record.id)}
                 >
