@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Plus, ChevronRight, MoreVertical } from 'lucide-react';
 import { Switch } from './ui/switch';
 import { api, getCognitoId } from '../api';
+import { SupplementScanModal } from './SupplementScanModal';
 
 interface MyPageEditModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export function MyPageEditModal({ isOpen, onClose, onSave }: MyPageEditModalProp
   const [isAddingCondition, setIsAddingCondition] = useState(false);
   const [newAllergy, setNewAllergy] = useState('');
   const [newCondition, setNewCondition] = useState('');
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
     ans_birth_dt: '',
@@ -76,6 +78,17 @@ export function MyPageEditModal({ isOpen, onClose, onSave }: MyPageEditModalProp
     }
     fetchData();
   }, [isOpen]);
+
+  const refreshSupplements = async () => {
+    const id = getCognitoId();
+    if (!id) return;
+    try {
+      const supplementsData = await api.getSupplements(id);
+      setSupplements(supplementsData.supplements ?? []);
+    } catch (e) {
+      console.error('영양제 목록 갱신 실패:', e);
+    }
+  };
 
   const toggleSupplement = async (id: number, currentActive: boolean) => {
     try {
@@ -156,7 +169,10 @@ export function MyPageEditModal({ isOpen, onClose, onSave }: MyPageEditModalProp
               <div className="bg-gray-50 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-900">복용 중인 영양제 목록</h3>
-                  <button className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700">
+                  <button
+                    onClick={() => setIsScanModalOpen(true)}
+                    className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700"
+                  >
                     <Plus className="w-4 h-4" />
                     영양제 추가
                   </button>
@@ -305,6 +321,15 @@ export function MyPageEditModal({ isOpen, onClose, onSave }: MyPageEditModalProp
           to { transform: translateX(0); }
         }
       `}</style>
+
+      <SupplementScanModal
+        isOpen={isScanModalOpen}
+        onClose={() => setIsScanModalOpen(false)}
+        onSaved={() => {
+          setIsScanModalOpen(false);
+          refreshSupplements();
+        }}
+      />
     </div>
   );
 }
