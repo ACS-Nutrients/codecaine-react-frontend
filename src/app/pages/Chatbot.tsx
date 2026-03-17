@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, Smile, User } from 'lucide-react';
 import { useSearchParams } from 'react-router';
-import { getCognitoId, getToken } from '../api';
+import { api, getCognitoId } from '../api';
 
 interface ChatMessage {
   type: 'user' | 'bot';
@@ -20,26 +20,15 @@ export function Chatbot() {
   useEffect(() => {
     const fetchHistory = async () => {
       if (!resultId) return;
-
+      const cognitoId = getCognitoId();
+      if (!cognitoId) return;
       try {
-        const cognitoId = getCognitoId();
-        const token = getToken();
-
-        if (!cognitoId || !token) return;
-
-        const response = await fetch(`/api/chatbot/history/${resultId}?cognito_id=${cognitoId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (response.ok) {
-          const data: { result_id: string; messages: ChatMessage[] } = await response.json();
-          setMessages(data.messages);
-        }
+        const data: { result_id: string; messages: ChatMessage[] } = await api.getChatHistory(resultId, cognitoId);
+        setMessages(data.messages);
       } catch (err) {
         console.error('Failed to fetch chat history:', err);
       }
     };
-
     fetchHistory();
   }, [resultId]);
 
@@ -57,31 +46,14 @@ export function Chatbot() {
 
     try {
       const cognitoId = getCognitoId();
-      const token = getToken();
+      if (!cognitoId) return;
 
-      if (!cognitoId || !token) return;
-
-      const response = await fetch('/api/chatbot/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          cognito_id: cognitoId,
-          result_id: resultId,
-          message: userMessage
-        })
-      });
-
-      if (response.ok) {
-        const data: { bot_message: string; timestamp: string } = await response.json();
-        setMessages(prev => [...prev, {
-          type: 'bot',
-          content: data.bot_message,
-          timestamp: data.timestamp
-        }]);
-      }
+      const data: { bot_message: string; timestamp: string } = await api.sendChatMessage(cognitoId, resultId, userMessage);
+      setMessages(prev => [...prev, {
+        type: 'bot',
+        content: data.bot_message,
+        timestamp: data.timestamp
+      }]);
     } catch (err) {
       console.error('Failed to send message:', err);
     } finally {
