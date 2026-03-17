@@ -39,20 +39,13 @@ jobs:
           IMAGE_TAG=$(date +%s)
           IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-          docker build -t $IMAGE .
+          docker build \
+          --build-arg VITE_COGNITO_USER_POOL_ID=${{ secrets.VITE_COGNITO_USER_POOL_ID }} \
+          --build-arg VITE_COGNITO_CLIENT_ID=${{ secrets.VITE_COGNITO_CLIENT_ID }} \
+          -t $IMAGE .
           docker push $IMAGE
 
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
-
-      - name: Get latest ECR image
-        id: latest-image
-        run: |
-          LATEST=$(aws ecr describe-images \
-            --repository-name $ECR_REPOSITORY \
-            --query 'sort_by(imageDetails, &imagePushedAt)[-1].imageTags[0]' \
-            --output text)
-          echo "tag=$LATEST" >> $GITHUB_OUTPUT
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$LATEST" >> $GITHUB_OUTPUT
 
       - name: Render task definition
         id: task-def
@@ -60,7 +53,7 @@ jobs:
         with:
           task-definition-arn: arn:aws:ecs:${{ env.AWS_REGION }}:070238434919:task-definition/${{ env.TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.latest-image.outputs.image }}
+          image: ${{ steps.build.outputs.image }}
 
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
