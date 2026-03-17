@@ -39,7 +39,10 @@ jobs:
           IMAGE_TAG=$(date +%s)
           IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-          docker build -t $IMAGE .
+          docker build \
+          --build-arg VITE_COGNITO_USER_POOL_ID=${{ secrets.VITE_COGNITO_USER_POOL_ID }} \
+          --build-arg VITE_COGNITO_CLIENT_ID=${{ secrets.VITE_COGNITO_CLIENT_ID }} \
+          -t $IMAGE .
           docker push $IMAGE
 
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
