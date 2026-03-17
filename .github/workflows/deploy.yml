@@ -47,23 +47,13 @@ jobs:
 
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
-      - name: Get latest ECR image
-        id: latest-image
-        run: |
-          LATEST=$(aws ecr describe-images \
-            --repository-name $ECR_REPOSITORY \
-            --query 'sort_by(imageDetails, &imagePushedAt)[-1].imageTags[0]' \
-            --output text)
-          echo "tag=$LATEST" >> $GITHUB_OUTPUT
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$LATEST" >> $GITHUB_OUTPUT
-
       - name: Render task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition-arn: arn:aws:ecs:${{ env.AWS_REGION }}:070238434919:task-definition/${{ env.TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.latest-image.outputs.image }}
+          image: ${{ steps.build.outputs.image }}
 
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1

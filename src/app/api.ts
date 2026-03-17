@@ -70,8 +70,8 @@ async function request(path: string, options: RequestInit = {}) {
 
 export const api = {
   // Auth (dev only)
-  getDevToken: (cognitoId: string) =>
-    fetch(`/dev/token/${cognitoId}`).then((r) => r.json()),
+  // getDevToken: (cognitoId: string) =>
+  //   fetch(`/dev/token/${cognitoId}`).then((r) => r.json()),
 
   // Profile
   getProfile: (cognitoId: string) => request(`/users/${cognitoId}`),
