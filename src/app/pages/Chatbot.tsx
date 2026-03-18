@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, Smile, User } from 'lucide-react';
 import { useSearchParams } from 'react-router';
-import { api, getCognitoId } from '../api';
+import { getCognitoId, getToken } from '../api';
 
 interface ChatMessage {
   type: 'user' | 'bot';
@@ -16,52 +16,58 @@ export function Chatbot() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      if (!resultId) return;
-      const cognitoId = getCognitoId();
-      if (!cognitoId) return;
-      try {
-        const data: { result_id: string; messages: ChatMessage[] } = await api.getChatHistory(resultId, cognitoId);
-        setMessages(data.messages);
-      } catch (err) {
-        console.error('Failed to fetch chat history:', err);
+    if (!resultId) return;
+    const cognitoId = getCognitoId();
+    const token = getToken();
+    if (!cognitoId || !token) return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/chatbot/${resultId}?cognito_id=${cognitoId}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'auth', token }));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'ping') {
+        ws.send(JSON.stringify({ type: 'pong' }));
+      } else if (data.type === 'history') {
+        setMessages(data.messages || []);
+      } else if (data.type === 'bot') {
+        setMessages(prev => [...prev, { type: 'bot', content: data.content, timestamp: data.timestamp }]);
+        setIsLoading(false);
       }
     };
-    fetchHistory();
+
+    ws.onerror = () => setIsLoading(false);
+    ws.onclose = () => setIsLoading(false);
+
+    wsRef.current = ws;
+
+    return () => {
+      ws.close();
+    };
   }, [resultId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!message.trim() || !resultId) return;
+  const handleSend = () => {
+    if (!message.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
     const userMessage = message;
-    setMessages(prev => [...prev, { type: 'user', content: userMessage }]);
+    const timestamp = new Date().toISOString();
+    setMessages(prev => [...prev, { type: 'user', content: userMessage, timestamp }]);
     setMessage('');
     setIsLoading(true);
 
-    try {
-      const cognitoId = getCognitoId();
-      if (!cognitoId) {
-        setIsLoading(false);
-        return;
-      }
-
-      const data: { bot_message: string; timestamp: string } = await api.sendChatMessage(cognitoId, resultId, userMessage);
-      setMessages(prev => [...prev, {
-        type: 'bot',
-        content: data.bot_message,
-        timestamp: data.timestamp
-      }]);
-    } catch (err) {
-      console.error('Failed to send message:', err);
-    } finally {
-      setIsLoading(false);
-    }
+    wsRef.current.send(JSON.stringify({ type: 'message', message: userMessage }));
   };
 
   return (
@@ -78,8 +84,7 @@ export function Chatbot() {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex items-start gap-3 ${msg.type === 'user' ? 'flex-row-reverse' : ''
-                }`}
+              className={`flex items-start gap-3 ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}
             >
               {msg.type === 'bot' && (
                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
