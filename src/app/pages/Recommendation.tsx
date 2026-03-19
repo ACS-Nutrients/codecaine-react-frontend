@@ -16,6 +16,7 @@ import { MyPageEditModal } from '../components/MyPageEditModal';
 import { api, getCognitoId } from '../api';
 
 type Step = 'info' | 'consent' | 'codef_info' | 'codef_auth' | 'health' | 'purpose' | 'analyzing';
+type PrescState = 'idle' | 'initLoading' | 'waitingForAuth' | 'fetchLoading' | 'success' | 'error';
 type ConsentChoice = 'agree' | 'disagree';
 
 // 백엔드로 전송되는 타입 (nhis_id는 프론트에서 해시된 값, 년도/날짜는 백엔드 자동 계산)
@@ -542,14 +543,16 @@ function StepHealth({
   onConfirm,
   onBack,
   initialExamItems = [],
-  initialMeds = [],
   initialHealthSummary = {},
   noCodefData = false,
+  onPrescInit,
+  onPrescFetch,
+  prescState = 'idle',
+  prescError: prescErrorProp = '',
 }: {
   onConfirm: (data: HealthFormData) => void;
   onBack: () => void;
   initialExamItems?: ExamItem[];
-  initialMeds?: MedItem[];
   initialHealthSummary?: {
     height?: string;
     weight?: string;
@@ -558,6 +561,10 @@ function StepHealth({
     age?: string;
   };
   noCodefData?: boolean;
+  onPrescInit?: () => void;
+  onPrescFetch?: () => void;
+  prescState?: PrescState;
+  prescError?: string;
 }) {
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [age, setAge] = useState('');
@@ -567,15 +574,11 @@ function StepHealth({
   const [note, setNote] = useState('');
 
   const [examItems, setExamItems] = useState<ExamItem[]>(initialExamItems);
-  const [meds, setMeds] = useState<MedItem[]>(initialMeds);
+  const [meds, setMeds] = useState<MedItem[]>([]);
 
   useEffect(() => {
     setExamItems(initialExamItems);
   }, [initialExamItems]);
-
-  useEffect(() => {
-    setMeds(initialMeds);
-  }, [initialMeds]);
 
   // CODEF에서 받아온 기본 건강 정보로 입력 폼을 자동 채운다
   useEffect(() => {
@@ -781,8 +784,62 @@ function StepHealth({
           </div>
         </div>
 
-        {/* Right: 현재 약물 복용 정보 + 기타 */}
+        {/* Right: 처방 기록 + 현재 약물 복용 정보 + 기타 */}
         <div className="flex flex-col gap-5">
+          {/* 처방 기록 가져오기 카드 */}
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">📄</span>
+              <h2 className="font-bold text-gray-900">처방 기록</h2>
+            </div>
+            {prescState === 'idle' && (
+              <button
+                onClick={onPrescInit}
+                className="w-full py-2.5 border-2 border-blue-300 text-blue-700 font-medium rounded-xl hover:bg-blue-50 transition-colors text-sm"
+              >
+                처방 기록 불러오기 (카카오 인증)
+              </button>
+            )}
+            {(prescState === 'initLoading' || prescState === 'fetchLoading') && (
+              <div className="flex items-center gap-3 py-1.5">
+                <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                <span className="text-sm text-gray-600">
+                  {prescState === 'initLoading' ? '카카오 인증 요청 중...' : '처방 기록 조회 중...'}
+                </span>
+              </div>
+            )}
+            {prescState === 'waitingForAuth' && (
+              <div>
+                <p className="text-sm text-gray-600 mb-3">
+                  카카오톡에서 건강보험 인증을 완료한 후 버튼을 눌러주세요.
+                </p>
+                <button
+                  onClick={onPrescFetch}
+                  className="w-full py-2.5 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold rounded-xl transition-colors text-sm"
+                >
+                  인증 완료, 처방 기록 가져오기
+                </button>
+              </div>
+            )}
+            {prescState === 'success' && (
+              <div className="flex items-center gap-2 py-1 text-green-600">
+                <CheckCircle2 className="w-5 h-5" />
+                <span className="text-sm font-medium">처방 기록이 분석에 포함되었습니다</span>
+              </div>
+            )}
+            {prescState === 'error' && (
+              <div>
+                <p className="text-red-500 text-xs mb-2">{prescErrorProp}</p>
+                <button
+                  onClick={onPrescInit}
+                  className="w-full py-2 border border-red-300 text-red-600 rounded-lg text-sm hover:bg-red-50 transition-colors"
+                >
+                  다시 시도
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="bg-white rounded-2xl shadow-sm p-6 flex-1">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -1209,15 +1266,12 @@ export function Recommendation() {
 
   // CODEF 상태
   const [codefUserInfo, setCodefUserInfo] = useState<CodefUserInfo | null>(null);
-  // init 응답 — 2way 인증 정보 + fetch 단계에서 재사용할 년도/날짜 범위 포함
+  // init 응답 — 건강검진 2way 인증 정보 + fetch 단계에서 재사용할 년도 범위 포함
   const [twoWayData, setTwoWayData] = useState<{
     health_check_two_way: object;
-    prescription_two_way: object;
     token: string;
     hc_start_year?: string;
     hc_end_year?: string;
-    presc_start?: string;
-    presc_end?: string;
   } | null>(null);
   // 1단계(init): 카카오 인증 요청 전송 중 로딩 — 화면은 즉시 전환하고 백그라운드에서 완료 대기
   const [codefInitLoading, setCodefInitLoading] = useState(false);
@@ -1226,7 +1280,15 @@ export function Recommendation() {
   const [codefAuthLoading, setCodefAuthLoading] = useState(false);
   const [codefAuthError, setCodefAuthError] = useState('');
   const [codefExamItems, setCodefExamItems] = useState<any[]>([]);
-  const [codefMeds, setCodefMeds] = useState<any[]>([]);
+  // 처방 기록 별도 인증 흐름 상태
+  const [prescState, setPrescState] = useState<PrescState>('idle');
+  const [prescError, setPrescError] = useState('');
+  const [prescTwoWayData, setPrescTwoWayData] = useState<{
+    prescription_two_way: object;
+    token: string;
+    presc_start?: string;
+    presc_end?: string;
+  } | null>(null);
   // CODEF에서 받아온 기본 건강 정보 — 건강정보 입력 폼 자동 채움용
   const [codefHealthSummary, setCodefHealthSummary] = useState<{
     height?: string;
@@ -1298,17 +1360,13 @@ export function Recommendation() {
         cognito_id: cognitoId,
         user_info: codefUserInfo,
         health_check_two_way: twoWayData.health_check_two_way,
-        prescription_two_way: twoWayData.prescription_two_way,
         token: twoWayData.token,
-        // init 단계에서 결정된 년도·날짜 범위를 그대로 전달 — 2-way 인증은 동일 파라미터 필수
+        // init 단계에서 결정된 년도 범위를 그대로 전달 — 2-way 인증은 동일 파라미터 필수
         hc_start_year: twoWayData.hc_start_year,
         hc_end_year: twoWayData.hc_end_year,
-        presc_start: twoWayData.presc_start,
-        presc_end: twoWayData.presc_end,
       });
-      // CODEF 원본 데이터는 백엔드에서 S3에 저장됨 — 검진 항목/처방만 state에 보관
+      // CODEF 원본 데이터는 백엔드에서 S3에 저장됨 — 검진 항목만 state에 보관
       setCodefExamItems(data.exam_items || []);
-      setCodefMeds(data.medications || []);
 
       // S3에 저장된 health_summary를 불러와 폼 채움
       // — 나이는 identity(생년월일 YYYYMMDD)로 계산하여 추가
@@ -1342,6 +1400,42 @@ export function Recommendation() {
       setCodefAuthError(e.message || '데이터 조회 실패. 카카오 인증을 확인해주세요.');
     } finally {
       setCodefAuthLoading(false);
+    }
+  };
+
+  // 처방 기록 인증 요청 (1단계) — 카카오 인증 요청 전송
+  const handlePrescInit = async () => {
+    if (!codefUserInfo) return;
+    setPrescState('initLoading');
+    setPrescError('');
+    try {
+      const result = await api.codefPrescInit(codefUserInfo);
+      setPrescTwoWayData(result);
+      setPrescState('waitingForAuth');
+    } catch (e: any) {
+      setPrescError(e.message || '처방 인증 요청 실패. 다시 시도해주세요.');
+      setPrescState('error');
+    }
+  };
+
+  // 처방 기록 데이터 조회 (2단계) — 카카오 인증 완료 후 처방 fetch
+  const handlePrescFetch = async () => {
+    if (!prescTwoWayData || !codefUserInfo) return;
+    const cognitoId = getCognitoId() || '';
+    setPrescState('fetchLoading');
+    try {
+      await api.codefPrescFetch({
+        cognito_id: cognitoId,
+        user_info: codefUserInfo,
+        prescription_two_way: prescTwoWayData.prescription_two_way,
+        token: prescTwoWayData.token,
+        presc_start: prescTwoWayData.presc_start,
+        presc_end: prescTwoWayData.presc_end,
+      });
+      setPrescState('success');
+    } catch (e: any) {
+      setPrescError(e.message || '처방 데이터 조회 실패. 카카오 인증을 확인해주세요.');
+      setPrescState('error');
     }
   };
 
@@ -1447,9 +1541,12 @@ export function Recommendation() {
             onConfirm={handleHealthConfirm}
             onBack={handleHealthBack}
             initialExamItems={codefExamItems}
-            initialMeds={codefMeds}
             initialHealthSummary={codefHealthSummary}
             noCodefData={codefNoData}
+            onPrescInit={handlePrescInit}
+            onPrescFetch={handlePrescFetch}
+            prescState={prescState}
+            prescError={prescError}
           />
         )}
 
