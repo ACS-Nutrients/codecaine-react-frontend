@@ -33,6 +33,14 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Debug secrets
+        run: |
+          echo "POOL_ID length: ${#POOL_ID}"
+          echo "CLIENT_ID length: ${#CLIENT_ID}"
+        env:
+          POOL_ID: ${{ secrets.VITE_COGNITO_USER_POOL_ID }}
+          CLIENT_ID: ${{ secrets.VITE_COGNITO_CLIENT_ID }}
+
       - name: Build and push image
         id: build
         run: |
