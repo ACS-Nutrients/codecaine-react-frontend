@@ -31,7 +31,7 @@ export default defineConfig({
       // analysis service (:8001)
       '/api/analysis': { target: process.env.ANALYSIS_SERVICE_URL || 'http://localhost:8001', changeOrigin: true },
       // codef service (:8001)
-      '/api/codef': { target: process.env.ANALYSIS_SERVICE_URL || 'http://localhost:8001', changeOrigin: true },
+      '/api/codef': { target: process.env.MYPAGE_SERVICE_URL || 'http://localhost:8003', changeOrigin: true },
     },
   },
   assetsInclude: ['**/*.svg', '**/*.csv'],
