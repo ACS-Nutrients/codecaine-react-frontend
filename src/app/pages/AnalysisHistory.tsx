@@ -6,8 +6,13 @@ import { api, getCognitoId } from '../api';
 interface AnalysisRecord {
   result_id: number;
   cognito_id: string;
-  summary_jsonb: { title: string;[key: string]: any };
+  summary_jsonb: { title: string; [key: string]: any };
   created_at: string;
+}
+
+interface AnalysisHistoryResponse {
+  total: number;
+  results: AnalysisRecord[];
 }
 
 interface RecordType {
@@ -24,23 +29,23 @@ export function AnalysisHistory() {
 
   useEffect(() => {
     const fetchRecords = async () => {
+      const cognitoId = getCognitoId();
+      if (!cognitoId) {
+        setError('인증 정보가 없습니다.');
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        setIsLoading(true);
-        const cognitoId = getCognitoId();
-
-        if (!cognitoId) {
-          throw new Error('인증 정보가 없습니다.');
-        }
-
-        const data: { total: number; results: AnalysisRecord[] } = await api.getAnalysisHistory(cognitoId, 10, 0);
+        const data: AnalysisHistoryResponse = await api.getAnalysisHistory(cognitoId, 10, 0);
         setRecords(data.results.map(item => ({
           id: item.result_id,
           date: new Date(item.created_at).toLocaleDateString('ko-KR'),
           title: item.summary_jsonb.title
         })));
-        setIsLoading(false);
       } catch (err) {
         setError('데이터를 불러오는 데 실패했습니다.');
+      } finally {
         setIsLoading(false);
       }
     };
