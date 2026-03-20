@@ -2,31 +2,31 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useState, useEffect } from 'react';
 import { api, getCognitoId } from '../api';
 
-interface HealthCheckData {
-  exam_date?: string;
-  overall_result?: string;
-  questionnaire?: string;
-  blood_pressure?: string;
-  fasting_glucose?: string;
-  antioxidant?: string;
-  [key: string]: any;
-}
 
 interface AnalysisResult {
   cognito_id: string;
   created_at: string;
-  summary_jsonb: {
-    title?: string;
-    summary?: string;
-    health_check?: HealthCheckData;
-    [key: string]: any;
-  };
+  summary?: string;
+  nutrient_gaps?: {
+    nutrient_id: number;
+    name_ko?: string;
+    name_en?: string;
+    unit?: string;
+    current_amount?: number;
+    gap_amount?: number;
+    max_amount?: number;
+  }[];
 }
 
 interface Recommendation {
-  name: string;
-  meta: string;
-  [key: string]: any;
+  rec_id: number;
+  product_id: number;
+  product_brand: string;
+  product_name: string;
+  serving_per_day?: number;
+  recommend_serving?: number;
+  rank: number;
+  nutrients: Record<string, number>;
 }
 
 export function RecommendationResult() {
@@ -148,7 +148,7 @@ export function RecommendationResult() {
                     </thead>
                     <tbody>
                       {(() => {
-                        const hc = analysisData?.summary_jsonb?.health_check;
+                        const hc: HealthCheckData = {};
                         return (
                           <>
                             <tr className="border-b border-gray-100">
@@ -220,7 +220,7 @@ export function RecommendationResult() {
                   </div>
                   <div className="flex-1">
                     <p className="text-2xl font-bold text-gray-900 mb-2">
-                      {analysisData?.summary_jsonb?.title ?? '부족 영양소 분석'}
+                      부족 영양소 분석
                     </p>
                     <p className="text-sm text-gray-600 leading-relaxed mb-4">
                       건강검진(CODEF) 결과와 문진(피로/수면) 및 현재 복용 영양제 정보를 종합하여,
@@ -228,21 +228,22 @@ export function RecommendationResult() {
                     </p>
 
                     <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50/80 text-sm text-gray-800 leading-relaxed">
-                      <div className="mb-3">
-                        <span className="font-bold text-gray-600">요약:</span>{' '}
-                        {analysisData?.summary_jsonb?.summary ?? '현재 등록된 복용 영양제 기준으로 영양소 섭취량을 분석하여, 개인 상태 및 검진 요약 지표를 반영한 목표 섭취량 대비 부족분을 계산했습니다.'}
+                      <div className="mb-3 whitespace-pre-line">
+                        {analysisData?.summary ?? '현재 등록된 복용 영양제 기준으로 영양소 섭취량을 분석하여, 개인 상태 및 검진 요약 지표를 반영한 목표 섭취량 대비 부족분을 계산했습니다.'}
                       </div>
 
-                      <ul className="space-y-2 pl-4">
-                        <li className="list-disc">
-                          <span className="font-bold text-gray-600">계산 근거:</span>{' '}
-                          목표 섭취량(개인 상태 기반 권장치) − 현재 추정 섭취량(등록된 복용 영양제 성분/함량 합산)
-                        </li>
-                        <li className="list-disc">
-                          <span className="font-bold text-gray-600">주의 사항:</span>{' '}
-                          처방약 복용 중이거나 위장 민감한 경우, 고함량 복용 전 전문가 상담 및 분할 섭취를 권장합니다.
-                        </li>
-                      </ul>
+                      {analysisData?.nutrient_gaps && analysisData.nutrient_gaps.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <span className="font-bold text-gray-600 block mb-2">부족 영양소 목록:</span>
+                          <div className="flex flex-wrap gap-2">
+                            {analysisData.nutrient_gaps.map((gap) => (
+                              <span key={gap.nutrient_id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-medium">
+                                {gap.name_ko} ({gap.gap_amount}{gap.unit} 부족)
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -258,10 +259,25 @@ export function RecommendationResult() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
-                  {recommendations.length > 0 ? recommendations.map((product, idx) => (
-                    <div key={idx} className="bg-white/90 rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
-                      <p className="text-sm font-bold text-gray-900">{product.name}</p>
-                      <div className="text-xs text-gray-500">{product.meta}</div>
+                  {recommendations.length > 0 ? recommendations.map((product) => (
+                    <div key={product.rec_id} className="bg-white/90 rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-400 font-medium">{product.rank}위</span>
+                        <span className="text-xs text-gray-500">{product.product_brand}</span>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900">{product.product_name}</p>
+                      <div className="text-xs text-gray-500">
+                        1일 {product.recommend_serving ?? product.serving_per_day}정
+                      </div>
+                      {Object.keys(product.nutrients).length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {Object.entries(product.nutrients).map(([name, amount]) => (
+                            <span key={name} className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-xs">
+                              {name} {amount}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )) : (
                     <div className="col-span-3 text-center py-8 text-gray-400 text-sm">
