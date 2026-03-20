@@ -23,10 +23,9 @@ export function Layout() {
     <div className="flex h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100">
       {/* Sidebar */}
       <aside className="w-56 bg-white/80 backdrop-blur-sm flex flex-col">
-        <div className="p-6">
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="로고" className="w-10 h-10 object-contain" />
-            <span className="font-bold text-xl text-gray-900">Portal</span>
+        <div className="p-4 flex justify-center">
+          <Link to="/">
+            <img src="/logo.png" alt="로고" className="w-36 h-36 object-contain" />
           </Link>
         </div>
 
