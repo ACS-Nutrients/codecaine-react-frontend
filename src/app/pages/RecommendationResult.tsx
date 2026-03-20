@@ -29,14 +29,17 @@ interface Recommendation {
   nutrients: Record<string, number>;
 }
 
+
 export function RecommendationResult() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const resultId = searchParams.get('result_id');
 
-  const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
+  const [analysisData, setAnalysisData]     = useState<AnalysisResult | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userName, setUserName]             = useState<string | null>(null);
+  const [healthData, setHealthData]         = useState<Record<string, any>>({});
+  const [isLoading, setIsLoading]           = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,12 +47,16 @@ export function RecommendationResult() {
       const cognitoId = getCognitoId();
       if (!cognitoId) { setIsLoading(false); return; }
       try {
-        const [analysis, rec] = await Promise.all([
+        const [analysis, rec, profile, hd] = await Promise.all([
           api.getAnalysisResult(Number(resultId), cognitoId),
           api.getRecommendations(Number(resultId), cognitoId),
+          api.getProfile(cognitoId).catch(() => null),
+          api.getHealthData(cognitoId).catch(() => ({})),
         ]);
         setAnalysisData(analysis);
         setRecommendations(rec?.recommendations ?? []);
+        setUserName(profile?.user_name ?? profile?.name ?? profile?.username ?? null);
+        setHealthData(hd ?? {});
       } catch (err) {
         console.error('Failed to fetch analysis result:', err);
       } finally {
@@ -66,6 +73,9 @@ export function RecommendationResult() {
       </div>
     );
   }
+
+  // CODEF health data - codef_health_data 하위 또는 최상위 필드 모두 시도
+  const hc: Record<string, any> = healthData?.codef_health_data ?? healthData ?? {};
 
   return (
     <div className="min-h-screen bg-white">
@@ -100,7 +110,7 @@ export function RecommendationResult() {
             <div className="flex items-center gap-3 px-4 py-3 rounded-full border border-gray-200 bg-white/85 shadow-lg">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-300 to-gray-400" />
               <div className="flex flex-col gap-0.5">
-                <b className="text-sm text-gray-900">{analysisData?.cognito_id ?? '-'}</b>
+                <b className="text-sm text-gray-900">{userName ?? analysisData?.cognito_id ?? '-'}</b>
                 <span className="text-xs text-gray-500">
                   마지막 분석: {analysisData?.created_at ? new Date(analysisData.created_at).toLocaleDateString('ko-KR') : '-'}
                 </span>
@@ -147,53 +157,66 @@ export function RecommendationResult() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(() => {
-                        const hc: HealthCheckData = {};
-                        return (
-                          <>
-                            <tr className="border-b border-gray-100">
-                              <td className="px-4 py-3 font-medium text-gray-900">검진일</td>
-                              <td className="px-4 py-3 text-gray-800">{hc?.exam_date ?? '-'}</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">-</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">{hc?.exam_institution ? `기관: ${hc.exam_institution}` : '-'}</td>
-                            </tr>
-                            <tr className="border-b border-gray-100">
-                              <td className="px-4 py-3 font-medium text-gray-900">종합 판정</td>
-                              <td className="px-4 py-3">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 border border-blue-200 text-blue-800 text-xs font-bold">
-                                  {hc?.overall_result ?? '-'}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">-</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">{hc?.overall_comment ?? '-'}</td>
-                            </tr>
-                            <tr className="border-b border-gray-100">
-                              <td className="px-4 py-3 font-medium text-gray-900">문진</td>
-                              <td className="px-4 py-3 text-gray-800">{hc?.questionnaire ?? '-'}</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">-</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">자가 기입 문진 기반</td>
-                            </tr>
-                            <tr className="border-b border-gray-100">
-                              <td className="px-4 py-3 font-medium text-gray-900">혈압</td>
-                              <td className="px-4 py-3 text-gray-800">{hc?.blood_pressure ?? '-'}</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">정상: &lt; 120/80</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">{hc?.blood_pressure_comment ?? '-'}</td>
-                            </tr>
-                            <tr className="border-b border-gray-100">
-                              <td className="px-4 py-3 font-medium text-gray-900">공복혈당</td>
-                              <td className="px-4 py-3 text-gray-800">{hc?.fasting_glucose ?? '-'}</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">정상: 70~99</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">{hc?.fasting_glucose_comment ?? '-'}</td>
-                            </tr>
-                            <tr>
-                              <td className="px-4 py-3 font-medium text-gray-900">항산화 관련 지표</td>
-                              <td className="px-4 py-3 text-gray-800">{hc?.antioxidant ?? '-'}</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">-</td>
-                              <td className="px-4 py-3 text-gray-500 text-xs">{hc?.antioxidant_comment ?? '-'}</td>
-                            </tr>
-                          </>
-                        );
-                      })()}
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 font-medium text-gray-900">검진일</td>
+                        <td className="px-4 py-3 text-gray-800">
+                          {hc?.exam_date ?? hc?.['검진일'] ?? hc?.checkup_date ?? '-'}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">-</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">
+                          {hc?.exam_institution ?? hc?.['기관명'] ?? hc?.institution ? `기관: ${hc?.exam_institution ?? hc?.['기관명'] ?? hc?.institution}` : '-'}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 font-medium text-gray-900">종합 판정</td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 border border-blue-200 text-blue-800 text-xs font-bold">
+                            {hc?.overall_result ?? hc?.['종합소견'] ?? hc?.['판정'] ?? '-'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">-</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">
+                          {hc?.overall_comment ?? hc?.['종합소견코멘트'] ?? '-'}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 font-medium text-gray-900">문진</td>
+                        <td className="px-4 py-3 text-gray-800">
+                          {hc?.questionnaire ?? hc?.['문진'] ?? '-'}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">-</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">자가 기입 문진 기반</td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 font-medium text-gray-900">혈압</td>
+                        <td className="px-4 py-3 text-gray-800">
+                          {hc?.blood_pressure ?? hc?.['혈압'] ?? hc?.bp ?? '-'}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">정상: &lt; 120/80</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">
+                          {hc?.blood_pressure_comment ?? hc?.['혈압코멘트'] ?? '-'}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 font-medium text-gray-900">공복혈당</td>
+                        <td className="px-4 py-3 text-gray-800">
+                          {hc?.fasting_glucose ?? hc?.['공복혈당'] ?? hc?.['혈당'] ?? '-'}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">정상: 70~99</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">
+                          {hc?.fasting_glucose_comment ?? hc?.['공복혈당코멘트'] ?? '-'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 font-medium text-gray-900">항산화 관련 지표</td>
+                        <td className="px-4 py-3 text-gray-800">
+                          {hc?.antioxidant ?? hc?.['항산화'] ?? hc?.['비타민C'] ?? hc?.['산화스트레스'] ?? '-'}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">-</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">
+                          {hc?.antioxidant_comment ?? hc?.['항산화코멘트'] ?? '-'}
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
