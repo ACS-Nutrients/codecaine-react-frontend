@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
-import { Calendar, Lightbulb, User, FileText, Settings, LogOut } from 'lucide-react';
+import { Calendar, Lightbulb, User, FileText, LogOut } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
 export function Layout() {
@@ -12,7 +12,6 @@ export function Layout() {
     { path: '/record', icon: Calendar, label: '기록하기' },
     { path: '/my-page', icon: User, label: '내 정보관리' },
     { path: '/analysis-history', icon: FileText, label: '분석 리포트' },
-    { path: '/settings', icon: Settings, label: '설정' },
   ];
 
   function handleLogout() {
