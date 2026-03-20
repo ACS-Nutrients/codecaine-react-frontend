@@ -36,9 +36,7 @@ export function Login() {
       <div className="w-full max-w-md">
         {/* 로고 */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-500 rounded-2xl mb-4">
-            <div className="w-8 h-8 border-3 border-white rounded-full border-2" />
-          </div>
+          <img src="/logo.png" alt="로고" className="w-28 h-28 object-contain mx-auto mb-2" />
           <h1 className="text-2xl font-bold text-gray-900">Portal</h1>
           <p className="text-gray-500 text-sm mt-1">영양제 추천 서비스</p>
         </div>
