@@ -25,9 +25,7 @@ export function Layout() {
       <aside className="w-56 bg-white/80 backdrop-blur-sm flex flex-col">
         <div className="p-6">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-white rounded-full"></div>
-            </div>
+            <img src="/logo.png" alt="로고" className="w-10 h-10 object-contain" />
             <span className="font-bold text-xl text-gray-900">Portal</span>
           </Link>
         </div>
