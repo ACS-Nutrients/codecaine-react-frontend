@@ -8,7 +8,7 @@ import {
 } from "react";
 import { CognitoUserSession } from "amazon-cognito-identity-js";
 import { getCurrentSession, signOut as cognitoSignOut } from "./cognito";
-import { setToken, clearAuth, setCognitoId, setOnAuthExpired } from "../api";
+import { setToken, clearAuth, setCognitoId } from "../api";
 
 interface AuthUser {
   cognitoId: string;
@@ -66,11 +66,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAuth();
     setUser(null);
   }, []);
-
-  // 세션 만료 시 자동 로그아웃 콜백 등록
-  useEffect(() => {
-    setOnAuthExpired(logout);
-  }, [logout]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>

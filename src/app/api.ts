@@ -4,11 +4,6 @@ const API_BASE = "/api";
 
 let _token: string | null = localStorage.getItem("access_token");
 let _cognitoId: string | null = localStorage.getItem("cognito_id");
-let _onAuthExpired: (() => void) | null = null;
-
-export function setOnAuthExpired(cb: () => void) {
-  _onAuthExpired = cb;
-}
 
 export function setToken(token: string) {
   _token = token;
@@ -38,11 +33,7 @@ export function clearAuth() {
 // 매 요청 전 Cognito 세션에서 유효한 토큰 확보
 async function getFreshToken(): Promise<string | null> {
   const session = await getCurrentSession();
-  if (!session) {
-    clearAuth();
-    _onAuthExpired?.();
-    return null;
-  }
+  if (!session) return null;
   const token = session.getIdToken().getJwtToken();
   setToken(token);
   return token;
@@ -55,7 +46,7 @@ async function requestFormData(path: string, formData: FormData) {
     headers["Authorization"] = `Bearer ${token}`;
   }
   const res = await fetch(`${API_BASE}${path}`, { method: "POST", body: formData, headers });
-  if (res.status === 401) { clearAuth(); _onAuthExpired?.(); throw new Error("401"); }
+  if (res.status === 401) { clearAuth(); throw new Error("401"); }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.detail || `HTTP ${res.status}`);
@@ -77,7 +68,6 @@ async function request(path: string, options: RequestInit = {}) {
 
   if (res.status === 401) {
     clearAuth();
-    _onAuthExpired?.();
     throw new Error("401");
   }
 
