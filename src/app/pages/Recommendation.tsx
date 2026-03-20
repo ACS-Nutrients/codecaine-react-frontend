@@ -148,7 +148,12 @@ function StepInfo({
           먼저 수정해주세요.
         </p>
         <p className="text-center text-gray-400 mb-8" style={{ fontSize: '12px' }}>
-          마지막 업데이트: 2024.04.10
+          마지막 접속시간: {(() => {
+            const iat = localStorage.getItem('last_login_at');
+            if (!iat) return '-';
+            const d = new Date(Number(iat) * 1000);
+            return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+          })()}
         </p>
 
         {savedSuccess && (
@@ -175,17 +180,6 @@ function StepInfo({
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-4 mt-6">
-        {['영양제 복용 기록', '알러지 정보', '기저질환 정보'].map((label) => (
-          <div
-            key={label}
-            className="px-3 py-1.5 bg-white/60 backdrop-blur-sm rounded-full text-gray-600 border border-white/80"
-            style={{ fontSize: '12px' }}
-          >
-            {label}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
