@@ -316,6 +316,8 @@ function StepCodefInfo({
     identity: '',
     rrn: '',
   });
+  const [rrnFront, setRrnFront] = useState('');
+  const [rrnBack, setRrnBack] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -324,15 +326,16 @@ function StepCodefInfo({
   };
 
   const handleSubmit = async () => {
-    if (!form.user_name || !form.phone_no || !form.identity || !form.rrn) {
+    if (!form.user_name || !form.phone_no || !form.identity || !rrnFront || !rrnBack) {
       setError('모든 항목을 입력해주세요.');
       return;
     }
+    const rrn = rrnFront + rrnBack;
     setError('');
     setLoading(true);
     // 주민등록번호는 브라우저에서 해시 처리 후 원본 폐기
     // onSubmit 호출 즉시 화면이 전환되므로 catch 불필요 (에러는 부모에서 처리)
-    const nhis_id = await hashRRN(form.rrn);
+    const nhis_id = await hashRRN(rrn);
     const { rrn: _, ...rest } = form;
     // type="date" 입력값은 "YYYY-MM-DD" 형식이므로 CODEF 전송 전 YYYYMMDD로 변환
     onSubmit({ ...rest, identity: rest.identity.replace(/-/g, ''), nhis_id });
@@ -358,7 +361,6 @@ function StepCodefInfo({
             { label: '이름', key: 'user_name' as const, placeholder: '홍길동', type: 'text' },
             { label: '휴대폰 번호', key: 'phone_no' as const, placeholder: '01012345678 (- 없이)', type: 'tel' },
             { label: '생년월일', key: 'identity' as const, placeholder: '', type: 'date' },
-            { label: '주민등록번호', key: 'rrn' as const, placeholder: '13자리 (- 없이)', type: 'password' },
           ].map(({ label, key, placeholder, type }) => (
             <div key={key}>
               <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -372,6 +374,30 @@ function StepCodefInfo({
               />
             </div>
           ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">주민등록번호</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={rrnFront}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRrnFront(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="생년월일 6자리"
+                maxLength={6}
+                autoComplete="off"
+                className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <span className="text-gray-500 font-bold">-</span>
+              <input
+                type="password"
+                value={rrnBack}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRrnBack(e.target.value.replace(/\D/g, '').slice(0, 7))}
+                placeholder="●●●●●●●"
+                maxLength={7}
+                autoComplete="off"
+                className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+          </div>
           <p className="text-xs text-gray-400">
             주민등록번호는 이 기기에서 즉시 암호화되며 서버로 전송되지 않습니다.
           </p>
