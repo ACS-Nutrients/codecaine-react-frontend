@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(token);
     setCognitoId(payload.sub);
     setUser(authUser);
+    localStorage.setItem("last_login_at", String(payload.iat));
 
     // 토큰 만료 시각(exp)까지 남은 시간에 자동 로그아웃 타이머 설정
     if (expireTimerRef.current) clearTimeout(expireTimerRef.current);
