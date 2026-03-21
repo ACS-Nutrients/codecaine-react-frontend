@@ -259,7 +259,7 @@ export function RecommendationResult() {
                                 </div>
                                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                   <div
-                                    className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-700"
+                                    className="h-full bg-blue-500 rounded-full transition-all duration-700"
                                     style={{ width: `${pct}%` }}
                                   />
                                 </div>
@@ -285,13 +285,15 @@ export function RecommendationResult() {
 
                 <div className="grid grid-cols-3 gap-4">
                   {recommendations.length > 0 ? recommendations.map((product) => {
-                    const rankColors = ['from-yellow-400 to-orange-400', 'from-gray-300 to-gray-400', 'from-orange-300 to-amber-400'];
-                    const rankColor = rankColors[product.rank - 1] ?? 'from-blue-200 to-blue-300';
+                    const rankBgColors = ['bg-yellow-400', 'bg-gray-400', 'bg-orange-400'];
+                    const rankTopColors = ['bg-yellow-400', 'bg-gray-300', 'bg-orange-300'];
+                    const rankBg = rankBgColors[product.rank - 1] ?? 'bg-blue-300';
+                    const rankTop = rankTopColors[product.rank - 1] ?? 'bg-blue-200';
                     return (
-                      <div key={product.rec_id} className="group relative bg-white/90 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-250 p-4 flex flex-col gap-3 overflow-hidden">
-                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r opacity-60" style={{ backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))` }} />
+                      <div key={product.rec_id} className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-4 flex flex-col gap-3 overflow-hidden">
+                        <div className={`absolute top-0 left-0 right-0 h-0.5 ${rankTop}`} />
                         <div className="flex items-center justify-between">
-                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br ${rankColor} text-white text-xs font-bold`}>
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${rankBg} text-white text-xs font-bold`}>
                             {product.rank}
                           </span>
                           <span className="text-xs text-gray-400 font-medium">{product.product_brand}</span>
