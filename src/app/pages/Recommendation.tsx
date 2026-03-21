@@ -924,10 +924,10 @@ function StepHealth({
               </tbody>
             </table>
 
-            {/* 기타 독이사항 */}
+            {/* 기타 특이사항 */}
             <div className="mt-5">
               <h3 className="font-bold text-gray-900 mb-2" style={{ fontSize: '14px' }}>
-                기타 독이사항
+                기타 특이사항
               </h3>
               <div className="relative">
                 <textarea
@@ -1385,7 +1385,9 @@ export function Recommendation() {
         },
         purposes,
       });
-      navigate(`/recommendation-result?result_id=${result.result_id}`);
+      navigate(`/recommendation-result?result_id=${result.result_id}`, {
+        state: { examItems: codefExamItems, examDate: hd?.exam_date || '' },
+      });
     } catch {
       setTimeout(() => navigate('/recommendation-result'), 2800);
     }
