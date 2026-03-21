@@ -41,12 +41,7 @@ async function hashRRN(rrn: string): Promise<string> {
 /* ─────────────────────────────── Portal Logo ─────────────────────────────── */
 function PortalLogo() {
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center relative overflow-hidden shadow">
-        <div className="w-5 h-5 border-2 border-white rounded-full" />
-      </div>
-      <span className="font-bold text-lg text-gray-900">Portal</span>
-    </div>
+    <img src="/logo.png" alt="로고" className="w-20 h-20 object-contain" />
   );
 }
 
