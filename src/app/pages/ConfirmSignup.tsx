@@ -41,7 +41,7 @@ export function ConfirmSignup() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="로고" className="w-48 h-48 object-contain mx-auto mb-2" />
+          <img src="/logo-layout.png" alt="로고" className="w-48 h-48 object-contain mx-auto mb-2" />
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
