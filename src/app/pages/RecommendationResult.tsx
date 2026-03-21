@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams, useLocation } from 'react-router';
 import { useState, useEffect } from 'react';
 import { api, getCognitoId } from '../api';
 
@@ -29,13 +29,25 @@ interface Recommendation {
   nutrients: Record<string, number>;
 }
 
+interface ExamItem {
+  id: number;
+  name: string;
+  value: string;
+  unit: string;
+  status: '정상' | '부족' | '과잉';
+  range: string;
+}
 
 export function RecommendationResult() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const resultId = searchParams.get('result_id');
 
-  const [analysisData, setAnalysisData]     = useState<AnalysisResult | null>(null);
+  const examItems: ExamItem[] = (location.state as any)?.examItems ?? [];
+  const examDate: string = (location.state as any)?.examDate ?? '';
+
+  const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [userName, setUserName]             = useState<string | null>(null);
   const [healthData, setHealthData]         = useState<Record<string, any>>({});
@@ -157,66 +169,39 @@ export function RecommendationResult() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 font-medium text-gray-900">검진일</td>
-                        <td className="px-4 py-3 text-gray-800">
-                          {hc?.exam_date ?? hc?.['검진일'] ?? hc?.checkup_date ?? '-'}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">-</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">
-                          {hc?.exam_institution ?? hc?.['기관명'] ?? hc?.institution ? `기관: ${hc?.exam_institution ?? hc?.['기관명'] ?? hc?.institution}` : '-'}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 font-medium text-gray-900">종합 판정</td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 border border-blue-200 text-blue-800 text-xs font-bold">
-                            {hc?.overall_result ?? hc?.['종합소견'] ?? hc?.['판정'] ?? '-'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">-</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">
-                          {hc?.overall_comment ?? hc?.['종합소견코멘트'] ?? '-'}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 font-medium text-gray-900">문진</td>
-                        <td className="px-4 py-3 text-gray-800">
-                          {hc?.questionnaire ?? hc?.['문진'] ?? '-'}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">-</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">자가 기입 문진 기반</td>
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 font-medium text-gray-900">혈압</td>
-                        <td className="px-4 py-3 text-gray-800">
-                          {hc?.blood_pressure ?? hc?.['혈압'] ?? hc?.bp ?? '-'}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">정상: &lt; 120/80</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">
-                          {hc?.blood_pressure_comment ?? hc?.['혈압코멘트'] ?? '-'}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 font-medium text-gray-900">공복혈당</td>
-                        <td className="px-4 py-3 text-gray-800">
-                          {hc?.fasting_glucose ?? hc?.['공복혈당'] ?? hc?.['혈당'] ?? '-'}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">정상: 70~99</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">
-                          {hc?.fasting_glucose_comment ?? hc?.['공복혈당코멘트'] ?? '-'}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3 font-medium text-gray-900">항산화 관련 지표</td>
-                        <td className="px-4 py-3 text-gray-800">
-                          {hc?.antioxidant ?? hc?.['항산화'] ?? hc?.['비타민C'] ?? hc?.['산화스트레스'] ?? '-'}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">-</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">
-                          {hc?.antioxidant_comment ?? hc?.['항산화코멘트'] ?? '-'}
-                        </td>
-                      </tr>
+                      {examDate && (
+                        <tr className="border-b border-gray-100">
+                          <td className="px-4 py-3 font-medium text-gray-900">검진일</td>
+                          <td className="px-4 py-3 text-gray-800">{examDate}</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">-</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">-</td>
+                        </tr>
+                      )}
+                      {examItems.length > 0 ? examItems.map((item, idx) => {
+                        const statusColor =
+                          item.status === '정상' ? 'text-green-600 bg-green-50' :
+                          item.status === '부족' ? 'text-red-500 bg-red-50' :
+                          'text-orange-500 bg-orange-50';
+                        return (
+                          <tr key={item.id} className={idx < examItems.length - 1 ? 'border-b border-gray-100' : ''}>
+                            <td className="px-4 py-3 font-medium text-gray-900">{item.name}</td>
+                            <td className="px-4 py-3 text-gray-800">
+                              {item.value} {item.unit}
+                              <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full font-medium ${statusColor}`}>
+                                {item.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 text-xs">{item.range}</td>
+                            <td className="px-4 py-3 text-gray-500 text-xs">-</td>
+                          </tr>
+                        );
+                      }) : (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-6 text-center text-gray-400 text-sm">
+                            CODEF 건강검진 데이터가 없습니다.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
