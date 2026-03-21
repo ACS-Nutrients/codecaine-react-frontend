@@ -22,14 +22,14 @@ export function Layout() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100">
       {/* Sidebar */}
-      <aside className="w-56 bg-white/80 backdrop-blur-sm flex flex-col">
+      <aside className="w-56 bg-white/85 backdrop-blur-sm flex flex-col shadow-[2px_0_24px_rgba(0,0,0,0.06)]">
         <div className="px-2 pt-3 pb-1 flex justify-center">
           <Link to="/">
-            <img src="/logo-1.png" alt="로고" className="w-52 h-52 object-contain" />
+            <img src="/logo-1.png" alt="로고" className="w-52 h-52 object-contain transition-transform duration-300 hover:scale-105" />
           </Link>
         </div>
 
-        <nav className="flex-1 px-4 pt-8">
+        <nav className="flex-1 px-3 pt-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -37,30 +37,36 @@ export function Layout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-1.5 transition-all duration-200 ${
                   isActive
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-200'
+                    : 'text-gray-500 hover:bg-blue-50 hover:text-blue-600'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-sm font-medium">{item.label}</span>
+                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : ''}`} />
+                <span className="text-sm font-semibold">{item.label}</span>
+                {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/70" />}
               </Link>
             );
           })}
         </nav>
 
         {/* 하단 유저 정보 + 로그아웃 */}
-        <div className="px-4 pb-6 border-t border-gray-100 pt-4">
-          <div className="px-2 mb-3">
-            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-            {user?.name && (
-              <p className="text-sm font-medium text-gray-700 truncate">{user.name}</p>
-            )}
+        <div className="px-3 pb-6 border-t border-gray-100/80 pt-4">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50 mb-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+              {user?.name ? user.name[0] : user?.email?.[0]?.toUpperCase() ?? '?'}
+            </div>
+            <div className="min-w-0">
+              {user?.name && (
+                <p className="text-sm font-semibold text-gray-700 truncate leading-tight">{user.name}</p>
+              )}
+              <p className="text-xs text-gray-400 truncate leading-tight">{user?.email}</p>
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2.5 w-full rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all text-sm"
+            className="flex items-center gap-3 px-4 py-2.5 w-full rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all duration-200 text-sm active:scale-95"
           >
             <LogOut className="w-4 h-4" />
             <span>로그아웃</span>
