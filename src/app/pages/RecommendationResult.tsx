@@ -80,8 +80,12 @@ export function RecommendationResult() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-gray-500">분석 결과를 불러오는 중...</p>
+      <div className="min-h-screen bg-white p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="skeleton h-10 w-48 rounded-xl" />
+          <div className="skeleton h-5 w-72 rounded-lg" />
+          <div className="skeleton h-[420px] w-full rounded-2xl mt-6" />
+        </div>
       </div>
     );
   }
@@ -241,15 +245,28 @@ export function RecommendationResult() {
                       </div>
 
                       {analysisData?.nutrient_gaps && analysisData.nutrient_gaps.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <span className="font-bold text-gray-600 block mb-2">부족 영양소 목록:</span>
-                          <div className="flex flex-wrap gap-2">
-                            {analysisData.nutrient_gaps.map((gap) => (
-                              <span key={gap.nutrient_id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-medium">
-                                {gap.name_ko} ({gap.gap_amount}{gap.unit} 부족)
-                              </span>
-                            ))}
-                          </div>
+                        <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
+                          <span className="font-bold text-gray-600 block">부족 영양소 분석:</span>
+                          {analysisData.nutrient_gaps.map((gap) => {
+                            const current = gap.current_amount ?? 0;
+                            const max = gap.max_amount ?? 100;
+                            const pct = Math.min(100, Math.round((current / max) * 100));
+                            return (
+                              <div key={gap.nutrient_id}>
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-xs font-semibold text-gray-700">{gap.name_ko}</span>
+                                  <span className="text-xs text-red-500 font-medium">{gap.gap_amount}{gap.unit} 부족</span>
+                                </div>
+                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-700"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                                <p className="text-xs text-gray-400 mt-0.5">{pct}% 충족 (목표 {max}{gap.unit})</p>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -267,27 +284,35 @@ export function RecommendationResult() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
-                  {recommendations.length > 0 ? recommendations.map((product) => (
-                    <div key={product.rec_id} className="bg-white/90 rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400 font-medium">{product.rank}위</span>
-                        <span className="text-xs text-gray-500">{product.product_brand}</span>
-                      </div>
-                      <p className="text-sm font-bold text-gray-900">{product.product_name}</p>
-                      <div className="text-xs text-gray-500">
-                        1일 {product.recommend_serving ?? product.serving_per_day}정
-                      </div>
-                      {Object.keys(product.nutrients).length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {Object.entries(product.nutrients).map(([name, amount]) => (
-                            <span key={name} className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-xs">
-                              {name} {amount}
-                            </span>
-                          ))}
+                  {recommendations.length > 0 ? recommendations.map((product) => {
+                    const rankColors = ['from-yellow-400 to-orange-400', 'from-gray-300 to-gray-400', 'from-orange-300 to-amber-400'];
+                    const rankColor = rankColors[product.rank - 1] ?? 'from-blue-200 to-blue-300';
+                    return (
+                      <div key={product.rec_id} className="group relative bg-white/90 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-250 p-4 flex flex-col gap-3 overflow-hidden">
+                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r opacity-60" style={{ backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))` }} />
+                        <div className="flex items-center justify-between">
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br ${rankColor} text-white text-xs font-bold`}>
+                            {product.rank}
+                          </span>
+                          <span className="text-xs text-gray-400 font-medium">{product.product_brand}</span>
                         </div>
-                      )}
-                    </div>
-                  )) : (
+                        <p className="text-sm font-bold text-gray-900 leading-snug">{product.product_name}</p>
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                          <span className="text-xs text-gray-500">1일 {product.recommend_serving ?? product.serving_per_day}정</span>
+                        </div>
+                        {Object.keys(product.nutrients).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {Object.entries(product.nutrients).map(([name, amount]) => (
+                              <span key={name} className="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs border border-blue-100">
+                                {name} {amount}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }) : (
                     <div className="col-span-3 text-center py-8 text-gray-400 text-sm">
                       추천 상품이 없습니다.
                     </div>
