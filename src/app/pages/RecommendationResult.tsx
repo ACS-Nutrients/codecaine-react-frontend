@@ -95,23 +95,8 @@ export function RecommendationResult() {
 
   return (
     <div className="min-h-screen bg-white">
-      <main className="relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div
-            className="absolute -top-48 -right-48 w-[620px] h-[620px] opacity-40"
-            style={{
-              background: 'radial-gradient(circle at 35% 35%, rgba(96,165,250,0.26), rgba(59,130,246,0.10) 45%, rgba(255,255,255,0) 70%)'
-            }}
-          />
-          <div
-            className="absolute -bottom-60 -left-60 w-[560px] h-[560px] opacity-30"
-            style={{
-              background: 'radial-gradient(circle at 35% 35%, rgba(148,163,184,0.22), rgba(255,255,255,0) 65%)'
-            }}
-          />
-        </div>
-
-        <div className="relative z-10 max-w-6xl mx-auto p-8">
+      <main>
+        <div className="max-w-6xl mx-auto p-8">
           {/* Topbar */}
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -124,7 +109,7 @@ export function RecommendationResult() {
             </div>
 
             <div className="flex items-center gap-3 px-4 py-3 rounded-full border border-gray-200 bg-white/85 shadow-lg">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-300 to-gray-400" />
+              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-bold" />
               <div className="flex flex-col gap-0.5">
                 <b className="text-sm text-gray-900">{userName ?? analysisData?.cognito_id ?? '-'}</b>
                 <span className="text-xs text-gray-500">
@@ -137,7 +122,7 @@ export function RecommendationResult() {
           {/* Report Card */}
           <article className="bg-white/92 rounded-[22px] border border-gray-200 shadow-2xl overflow-hidden">
             {/* Header */}
-            <header className="px-6 py-5 flex items-start justify-between gap-4 border-b border-gray-100 bg-gradient-to-b from-blue-50/60 to-white/94">
+            <header className="px-6 py-5 flex items-start justify-between gap-4 border-b border-gray-100 bg-blue-50/40">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-2">
                   건강 상태 분석 보고서
@@ -221,13 +206,7 @@ export function RecommendationResult() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div
-                    className="w-14 h-14 flex-shrink-0 rounded-2xl flex items-center justify-center text-2xl border border-blue-200"
-                    style={{
-                      background: 'radial-gradient(circle at 30% 30%, rgba(96,165,250,0.35), rgba(59,130,246,0.18))',
-                      boxShadow: '0 16px 30px rgba(59,130,246,0.10)'
-                    }}
-                  >
+                  <div className="w-14 h-14 flex-shrink-0 rounded-2xl flex items-center justify-center text-2xl bg-blue-50 border border-blue-100">
                     💡
                   </div>
                   <div className="flex-1">
