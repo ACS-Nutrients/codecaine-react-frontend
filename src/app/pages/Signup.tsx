@@ -42,7 +42,7 @@ export function Signup() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/logo-1.png" alt="로고" className="w-48 h-48 object-contain mx-auto mb-2" />
+          <img src="/logo.png" alt="로고" className="w-48 h-48 object-contain mx-auto mb-2" />
           <p className="text-gray-500 text-sm mt-1">영양제 추천 서비스</p>
         </div>
 

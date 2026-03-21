@@ -25,7 +25,7 @@ export function Layout() {
       <aside className="w-56 bg-white/85 backdrop-blur-sm flex flex-col shadow-[2px_0_24px_rgba(0,0,0,0.06)]">
         <div className="px-2 pt-3 pb-1 flex justify-center">
           <Link to="/">
-            <img src="/logo-1.png" alt="로고" className="w-52 h-52 object-contain transition-transform duration-300 hover:scale-105" />
+            <img src="/logo.png" alt="로고" className="w-52 h-52 object-contain transition-transform duration-300 hover:scale-105" />
           </Link>
         </div>
 
