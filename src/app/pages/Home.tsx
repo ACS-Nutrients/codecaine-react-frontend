@@ -23,7 +23,7 @@ export function Home() {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-white/50 px-8 py-4 flex items-center justify-end">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
             {userEmail?.[0]?.toUpperCase() ?? <User className="w-4 h-4" />}
           </div>
           <span className="text-sm text-gray-600">{userEmail}</span>
@@ -40,11 +40,11 @@ export function Home() {
         <div className="grid md:grid-cols-2 gap-6 max-w-5xl">
           {/* 분석 기록 Card */}
           <div className="animate-fade-up animate-fade-up-1 group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden">
-            {/* 상단 그라디언트 라인 */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-orange-400" />
+            {/* 상단 포인트 라인 */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-400 rounded-t-2xl" />
             <div className="p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br from-yellow-100 to-orange-100 shadow-sm">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-yellow-50 shadow-sm">
                   <Lightbulb className="w-8 h-8 text-yellow-500" />
                 </div>
                 <div>
@@ -69,7 +69,7 @@ export function Home() {
 
               <Link
                 to="/recommendation"
-                className="block w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 active:scale-95 shadow-md shadow-blue-200">
+                className="block w-full bg-blue-500 text-white text-center py-3 rounded-xl font-semibold hover:bg-blue-600 transition-all duration-200 active:scale-95">
                 분석 시작하기 →
               </Link>
             </div>
@@ -77,11 +77,11 @@ export function Home() {
 
           {/* 기록하기 Card */}
           <div className="animate-fade-up animate-fade-up-2 group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden">
-            {/* 상단 그라디언트 라인 */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-purple-400" />
+            {/* 상단 포인트 라인 */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-blue-400 rounded-t-2xl" />
             <div className="p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 shadow-sm">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-blue-50 shadow-sm">
                   <Calendar className="w-8 h-8 text-blue-500" />
                 </div>
                 <div>
@@ -102,7 +102,7 @@ export function Home() {
 
               <Link
                 to="/record"
-                className="block w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 active:scale-95 shadow-md shadow-blue-200"
+                className="block w-full bg-blue-500 text-white text-center py-3 rounded-xl font-semibold hover:bg-blue-600 transition-all duration-200 active:scale-95"
               >
                 기록하기 →
               </Link>

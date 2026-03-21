@@ -188,8 +188,17 @@ export function MyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500 text-lg">로딩 중...</p>
+      <div className="min-h-screen p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="skeleton h-8 w-48 rounded-lg mb-6" />
+          <div className="grid grid-cols-2 gap-6">
+            <div className="skeleton h-96 rounded-2xl" />
+            <div className="space-y-4">
+              <div className="skeleton h-48 rounded-2xl" />
+              <div className="skeleton h-32 rounded-2xl" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -212,28 +221,22 @@ export function MyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">내 정보 관리</h1>
-          <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-gray-100 rounded-lg"><Bell className="w-5 h-5 text-gray-600" /></button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg"><Share2 className="w-5 h-5 text-gray-600" /></button>
-          </div>
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto p-6 animate-fade-up">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">내 정보 관리</h1>
+          <p className="text-gray-400 text-sm">복용 중인 영양제와 건강 정보를 관리하세요.</p>
         </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-2 gap-6">
           {/* Left - Supplement List */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">영양제</h2>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
                   {(['all', 'active', 'inactive'] as const).map(f => (
                     <button key={f} onClick={() => setFilter(f)}
-                      className={`px-3 py-2 rounded-lg text-sm ${filter === f ? 'bg-blue-500 text-white font-medium' : 'bg-gray-50 border border-gray-200'}`}>
+                      className={`px-3 py-2 rounded-lg text-sm transition-all duration-200 active:scale-95 ${filter === f ? 'bg-blue-500 text-white font-semibold' : 'bg-white border border-gray-200 text-gray-500 hover:border-blue-200 hover:text-blue-500'}`}>
                       {f === 'all' ? '전체' : f === 'active' ? '활성' : '비활성'}
                     </button>
                   ))}
@@ -250,7 +253,7 @@ export function MyPage() {
                   className={`border rounded-xl p-4 transition-colors cursor-pointer ${selectedSupplement === supplement.ans_current_id ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl">
+                      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl border border-blue-100">
                         {ICONS[idx % ICONS.length]}
                       </div>
                       <h3 className="font-medium text-gray-900">{supplement.ans_product_name}</h3>
@@ -277,7 +280,7 @@ export function MyPage() {
 
           {/* Right Panel */}
           {selectedSupplement && selected ? (
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 animate-fade-up">
               <div className="flex items-center gap-3 mb-6">
                 <button className="p-2 hover:bg-gray-100 rounded-lg" onClick={() => setSelectedSupplement(null)}>
                   <ChevronLeft className="w-5 h-5" />
@@ -309,9 +312,9 @@ export function MyPage() {
               </div>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 animate-fade-up">
               {/* User Info */}
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900">유저 정보</h2>
                   <button className="text-blue-500 text-sm font-medium hover:text-blue-600" onClick={() => setIsEditingUser(true)}>수정</button>
@@ -357,13 +360,13 @@ export function MyPage() {
                 {isEditingUser && (
                   <div className="flex items-center justify-end mt-4 gap-2">
                     <button className="text-gray-500 hover:text-gray-700" onClick={handleCancelEditUser}>취소</button>
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onClick={handleSaveUserInfo}>저장</button>
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 active:scale-95 transition-all duration-200 text-sm font-medium" onClick={handleSaveUserInfo}>저장</button>
                   </div>
                 )}
               </div>
 
               {/* Allergy */}
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-bold text-gray-900">알러지 정보</h2>
                   <button className="text-blue-500 hover:text-blue-600" onClick={() => setIsAddingAllergy(true)}><Plus className="w-5 h-5" /></button>
@@ -383,13 +386,13 @@ export function MyPage() {
                       onKeyDown={(e) => e.key === 'Enter' && handleAddAllergy()}
                       className="border border-gray-300 px-2 py-1 rounded flex-1" placeholder="알러지 추가" autoFocus />
                     <button className="text-gray-500 hover:text-gray-700" onClick={() => { setIsAddingAllergy(false); setNewAllergy(''); }}>취소</button>
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onClick={handleAddAllergy}>추가</button>
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 active:scale-95 transition-all duration-200 text-sm font-medium" onClick={handleAddAllergy}>추가</button>
                   </div>
                 )}
               </div>
 
               {/* Conditions */}
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-bold text-gray-900">기저질환 정보</h2>
                   <button className="text-blue-500 hover:text-blue-600" onClick={() => setIsAddingCondition(true)}><Plus className="w-5 h-5" /></button>
@@ -409,7 +412,7 @@ export function MyPage() {
                       onKeyDown={(e) => e.key === 'Enter' && handleAddCondition()}
                       className="border border-gray-300 px-2 py-1 rounded flex-1" placeholder="기저질환 추가" autoFocus />
                     <button className="text-gray-500 hover:text-gray-700" onClick={() => { setIsAddingCondition(false); setNewCondition(''); }}>취소</button>
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onClick={handleAddCondition}>추가</button>
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 active:scale-95 transition-all duration-200 text-sm font-medium" onClick={handleAddCondition}>추가</button>
                   </div>
                 )}
               </div>

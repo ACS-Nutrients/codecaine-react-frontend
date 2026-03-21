@@ -39,7 +39,7 @@ export function Layout() {
                 to={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-1.5 transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-200'
+                    ? 'bg-blue-500 text-white shadow-sm'
                     : 'text-gray-500 hover:bg-blue-50 hover:text-blue-600'
                 }`}
               >
@@ -54,7 +54,7 @@ export function Layout() {
         {/* 하단 유저 정보 + 로그아웃 */}
         <div className="px-3 pb-6 border-t border-gray-100/80 pt-4">
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50 mb-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
               {user?.name ? user.name[0] : user?.email?.[0]?.toUpperCase() ?? '?'}
             </div>
             <div className="min-w-0">
