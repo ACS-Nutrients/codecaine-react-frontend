@@ -20,7 +20,7 @@ export function Layout() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100">
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <aside className="w-56 bg-white/85 backdrop-blur-sm flex flex-col shadow-[2px_0_24px_rgba(0,0,0,0.06)]">
         <div className="px-2 pt-3 pb-1 flex justify-center">

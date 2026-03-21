@@ -106,7 +106,7 @@ function StepInfo({
         {/* Illustration */}
         <div className="flex justify-center mb-8">
           <div className="relative w-32 h-32">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full" />
+            <div className="absolute inset-0 bg-blue-100 rounded-full" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex flex-col items-center gap-1">
                 <div className="w-10 h-10 bg-blue-300 rounded-full flex items-center justify-center">
@@ -1508,12 +1508,8 @@ export function Recommendation() {
 
   return (
     <div
-      className={`min-h-screen flex items-center justify-center p-8 relative bg-gradient-to-br ${bgGradient} transition-all duration-500`}
+      className="min-h-screen flex items-center justify-center p-8 bg-gray-50"
     >
-      {/* Decorative blobs */}
-      <div className="absolute top-16 right-24 w-64 h-64 bg-blue-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-16 left-16 w-48 h-48 bg-purple-200/20 rounded-full blur-3xl pointer-events-none" />
-
       {/* Fade wrapper */}
       <div
         className="relative z-10 w-full flex justify-center transition-all duration-300"
