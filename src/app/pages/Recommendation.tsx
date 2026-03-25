@@ -827,13 +827,13 @@ function StepHealth({
               </button>
             </div>
 
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="text-left text-gray-500 font-medium pb-2">약품명</th>
-                  <th className="text-left text-gray-500 font-medium pb-2">용량</th>
-                  <th className="text-left text-gray-500 font-medium pb-2">복용 주기</th>
-                  <th className="text-gray-500 font-medium pb-2">수정</th>
+                  <th className="text-left text-gray-500 font-medium pb-2 w-[40%]">약품명</th>
+                  <th className="text-left text-gray-500 font-medium pb-2 w-[22%]">용량</th>
+                  <th className="text-left text-gray-500 font-medium pb-2 w-[28%]">복용 주기</th>
+                  <th className="text-gray-500 font-medium pb-2 w-[10%]">수정</th>
                 </tr>
               </thead>
               <tbody>
@@ -876,9 +876,9 @@ function StepHealth({
                   ) : (
                     // 일반 표시 행
                     <tr key={med.id} className="border-b border-gray-50">
-                      <td className="py-2.5 text-gray-800">{med.name}</td>
-                      <td className="py-2.5 text-gray-700">{med.dose}</td>
-                      <td className="py-2.5 text-gray-600">{med.schedule}</td>
+                      <td className="py-2.5 text-gray-800 break-words">{med.name}</td>
+                      <td className="py-2.5 text-gray-700 break-words">{med.dose}</td>
+                      <td className="py-2.5 text-gray-600 break-words">{med.schedule}</td>
                       <td className="py-2.5">
                         <div className="flex items-center justify-center gap-2">
                           <button
