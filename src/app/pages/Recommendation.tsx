@@ -1227,12 +1227,9 @@ export function Recommendation() {
   // init 응답 — 2way 인증 정보 + fetch 단계에서 재사용할 년도/날짜 범위 포함
   const [twoWayData, setTwoWayData] = useState<{
     health_check_two_way: object;
-    prescription_two_way: object;
     token: string;
     hc_start_year?: string;
     hc_end_year?: string;
-    presc_start?: string;
-    presc_end?: string;
   } | null>(null);
   // 1단계(init): 카카오 인증 요청 전송 중 로딩 — 화면은 즉시 전환하고 백그라운드에서 완료 대기
   const [codefInitLoading, setCodefInitLoading] = useState(false);
@@ -1313,13 +1310,9 @@ export function Recommendation() {
         cognito_id: cognitoId,
         user_info: codefUserInfo,
         health_check_two_way: twoWayData.health_check_two_way,
-        prescription_two_way: twoWayData.prescription_two_way,
         token: twoWayData.token,
-        // init 단계에서 결정된 년도·날짜 범위를 그대로 전달 — 2-way 인증은 동일 파라미터 필수
         hc_start_year: twoWayData.hc_start_year,
         hc_end_year: twoWayData.hc_end_year,
-        presc_start: twoWayData.presc_start,
-        presc_end: twoWayData.presc_end,
       });
       // CODEF 원본 데이터는 백엔드에서 S3에 저장됨 — 검진 항목/처방만 state에 보관
       setCodefExamItems(data.exam_items || []);

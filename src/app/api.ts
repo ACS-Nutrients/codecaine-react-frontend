@@ -163,12 +163,9 @@ export const api = {
     cognito_id: string;
     user_info: object;
     health_check_two_way: object;
-    prescription_two_way: object;
     token: string;
     hc_start_year?: string;
     hc_end_year?: string;
-    presc_start?: string;
-    presc_end?: string;
   }) => request("/users/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
 
   // Chatbot
