@@ -558,6 +558,7 @@ function StepHealth({
   onBack,
   initialExamItems = [],
   initialHealthSummary = {},
+  initialMeds = [],
   noCodefData = false,
 }: {
   onConfirm: (data: HealthFormData) => void;
@@ -570,6 +571,7 @@ function StepHealth({
     gender?: string;
     age?: string;
   };
+  initialMeds?: MedItem[];
   noCodefData?: boolean;
 }) {
   const [gender, setGender] = useState<'male' | 'female'>('male');
@@ -580,11 +582,15 @@ function StepHealth({
   const [note, setNote] = useState('');
 
   const [examItems, setExamItems] = useState<ExamItem[]>(initialExamItems);
-  const [meds, setMeds] = useState<MedItem[]>([]);
+  const [meds, setMeds] = useState<MedItem[]>(initialMeds);
 
   useEffect(() => {
     setExamItems(initialExamItems);
   }, [initialExamItems]);
+
+  useEffect(() => {
+    if (initialMeds.length > 0) setMeds(initialMeds);
+  }, [initialMeds]);
 
   // CODEF에서 받아온 기본 건강 정보로 입력 폼을 자동 채운다
   useEffect(() => {
@@ -1232,6 +1238,7 @@ export function Recommendation() {
   const [codefAuthLoading, setCodefAuthLoading] = useState(false);
   const [codefAuthError, setCodefAuthError] = useState('');
   const [codefExamItems, setCodefExamItems] = useState<any[]>([]);
+  const [codefMedications, setCodefMedications] = useState<MedItem[]>([]);
   // CODEF에서 받아온 기본 건강 정보 — 건강정보 입력 폼 자동 채움용
   const [codefHealthSummary, setCodefHealthSummary] = useState<{
     height?: string;
@@ -1309,6 +1316,7 @@ export function Recommendation() {
       });
       // CODEF 원본 데이터는 백엔드에서 S3에 저장됨 — 검진 항목만 state에 보관
       setCodefExamItems(data.exam_items || []);
+      setCodefMedications(data.medications || []);
 
       // S3에 저장된 health_summary를 불러와 폼 채움
       // — 나이는 identity(생년월일 YYYYMMDD)로 계산하여 추가
@@ -1446,6 +1454,7 @@ export function Recommendation() {
             onBack={handleHealthBack}
             initialExamItems={codefExamItems}
             initialHealthSummary={codefHealthSummary}
+            initialMeds={codefMedications}
             noCodefData={codefNoData}
           />
         )}
