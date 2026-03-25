@@ -301,7 +301,7 @@ function StepCodefInfo({
   onSubmit,
   onBack,
 }: {
-  onSubmit: (info: CodefUserInfo) => void;
+  onSubmit: (info: CodefUserInfo, gender: 'male' | 'female') => void;
   onBack: () => void;
 }) {
   const [form, setForm] = useState<CodefFormInput>({
@@ -331,8 +331,10 @@ function StepCodefInfo({
     // onSubmit 호출 즉시 화면이 전환되므로 catch 불필요 (에러는 부모에서 처리)
     const nhis_id = await hashRRN(rrn);
     const { rrn: _, ...rest } = form;
+    const genderDigit = parseInt(rrnBack[0]);
+    const gender: 'male' | 'female' = genderDigit % 2 === 1 ? 'male' : 'female';
     // type="date" 입력값은 "YYYY-MM-DD" 형식이므로 CODEF 전송 전 YYYYMMDD로 변환
-    onSubmit({ ...rest, identity: rest.identity.replace(/-/g, ''), nhis_id });
+    onSubmit({ ...rest, identity: rest.identity.replace(/-/g, ''), nhis_id }, gender);
   };
 
   return (
@@ -497,29 +499,40 @@ function StepCodefAuth({
           </>
         )}
 
-        {error && (
-          <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg mb-4">{error}</p>
+        {/* 데이터 조회 중 로딩 화면 */}
+        {loading ? (
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-800 font-semibold text-base">건강 데이터를 가져오는 중입니다...</p>
+            <p className="text-gray-400 text-sm text-center">
+              건강검진 결과와 처방 기록을 불러오고 있어요.
+              <br />최대 30초 정도 소요될 수 있습니다.
+            </p>
+          </div>
+        ) : (
+          <>
+            {error && (
+              <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg mb-4">{error}</p>
+            )}
+            <div className="flex flex-col gap-3">
+              {!initLoading && !initError && (
+                <button
+                  onClick={onConfirm}
+                  className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  인증 완료, 데이터 가져오기
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={onBack}
+                className="w-full py-3 border-2 border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50"
+              >
+                다시 입력하기
+              </button>
+            </div>
+          </>
         )}
-
-        <div className="flex flex-col gap-3">
-          {/* init 완료 시에만 "인증 완료" 버튼 노출 */}
-          {!initLoading && !initError && (
-            <button
-              onClick={onConfirm}
-              disabled={loading}
-              className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-200 text-gray-900 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {loading ? '데이터 조회 중...' : '인증 완료, 데이터 가져오기'}
-              {!loading && <ChevronRight className="w-5 h-5" />}
-            </button>
-          )}
-          <button
-            onClick={onBack}
-            className="w-full py-3 border-2 border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50"
-          >
-            다시 입력하기
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -1278,7 +1291,8 @@ export function Recommendation() {
     }
   };
 
-  const handleCodefInfoSubmit = async (info: CodefUserInfo) => {
+  const handleCodefInfoSubmit = async (info: CodefUserInfo, gender: 'male' | 'female') => {
+    setCodefHealthSummary(prev => ({ ...prev, gender }));
     // 화면을 즉시 전환한 뒤 백그라운드에서 codefInit(카카오 인증 요청 전송) 완료를 기다린다.
     // — 기존에는 API 완료 후 전환해서 사용자가 오래 기다려야 했음
     setCodefUserInfo(info);
@@ -1335,13 +1349,13 @@ export function Recommendation() {
           ) age -= 1;
           summary.age = String(age);
         }
-        setCodefHealthSummary(summary);
+        setCodefHealthSummary(prev => ({ gender: prev.gender, ...summary }));
         const hasData = (data.exam_items || []).length > 0 || summary.height;
         setCodefNoData(!hasData);
       } catch {
         // S3 로드 실패 시 codefFetch 응답에서 직접 사용
         const summary = data.health_summary || {};
-        setCodefHealthSummary(summary);
+        setCodefHealthSummary(prev => ({ gender: prev.gender, ...summary }));
         setCodefNoData(!(data.exam_items?.length > 0 || summary.height));
       }
 

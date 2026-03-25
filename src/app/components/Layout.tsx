@@ -9,9 +9,9 @@ export function Layout() {
 
   const menuItems = [
     { path: '/recommendation', icon: Lightbulb, label: '분석하기' },
+    { path: '/analysis-history', icon: FileText, label: '분석 리포트' },
     { path: '/record', icon: Calendar, label: '기록하기' },
     { path: '/my-page', icon: User, label: '내 정보관리' },
-    { path: '/analysis-history', icon: FileText, label: '분석 리포트' },
   ];
 
   function handleLogout() {
