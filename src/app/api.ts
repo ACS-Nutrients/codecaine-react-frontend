@@ -157,20 +157,6 @@ export const api = {
     hc_start_year?: string;
     hc_end_year?: string;
   }) => request("/users/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
-  codefPrescInit: (userInfo: {
-    user_name: string;
-    phone_no: string;
-    identity: string;
-    nhis_id: string;
-  }) => request("/users/codef/presc-init", { method: "POST", body: JSON.stringify(userInfo) }),
-  codefPrescFetch: (payload: {
-    cognito_id: string;
-    user_info: object;
-    prescription_two_way: object;
-    token: string;
-    presc_start?: string;
-    presc_end?: string;
-  }) => request("/users/codef/presc-fetch", { method: "POST", body: JSON.stringify(payload) }),
 
   // Chatbot
   getChatHistory: (resultId: string, cognitoId: string) =>

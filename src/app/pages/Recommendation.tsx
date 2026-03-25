@@ -1376,7 +1376,6 @@ export function Recommendation() {
         user_info: codefUserInfo,
         health_check_two_way: twoWayData.health_check_two_way,
         token: twoWayData.token,
-        // init 단계에서 결정된 년도 범위를 그대로 전달 — 2-way 인증은 동일 파라미터 필수
         hc_start_year: twoWayData.hc_start_year,
         hc_end_year: twoWayData.hc_end_year,
       });
