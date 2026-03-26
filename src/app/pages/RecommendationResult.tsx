@@ -12,9 +12,9 @@ interface AnalysisResult {
     name_ko?: string;
     name_en?: string;
     unit?: string;
-    current_amount?: number;
-    gap_amount?: number;
-    max_amount?: number;
+    current_amount?: string | number;
+    gap_amount?: string | number;
+    rda_amount?: string | number;
   }[];
 }
 
@@ -128,7 +128,7 @@ export function RecommendationResult() {
                   건강 상태 분석 보고서
                 </h2>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  건강검진(CODEF) + 문진 + 현재 복용 영양제 정보를 종합해
+                  건강검진(CODEF) + 현재 복용 영양제 정보를 종합해
                   부족 영양군과 추천 제품을 제안합니다.
                 </p>
               </div>
@@ -144,7 +144,6 @@ export function RecommendationResult() {
                   <h3 className="text-base font-bold text-gray-900">
                     1) 건강검진 결과 (CODEF)
                   </h3>
-                  <span className="text-xs text-gray-500">원문 항목을 한 섹션에서 확인</span>
                 </div>
 
                 <div className="bg-white/90 border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
@@ -202,7 +201,6 @@ export function RecommendationResult() {
                   <h3 className="text-base font-bold text-gray-900">
                     2) 부족 영양군 분석 결과
                   </h3>
-                  <span className="text-xs text-gray-500">요약 문장으로 근거/주의 포함</span>
                 </div>
 
                 <div className="flex gap-4">
@@ -214,7 +212,7 @@ export function RecommendationResult() {
                       부족 영양소 분석
                     </p>
                     <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                      건강검진(CODEF) 결과와 문진(피로/수면) 및 현재 복용 영양제 정보를 종합하여,
+                      건강검진(CODEF) 결과와 현재 복용 영양제 정보를 종합하여,
                       부족 영양군과 필요 함량을 산출했습니다.
                     </p>
 
@@ -227,9 +225,10 @@ export function RecommendationResult() {
                         <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
                           <span className="font-bold text-gray-600 block">부족 영양소 분석:</span>
                           {analysisData.nutrient_gaps.map((gap) => {
-                            const current = gap.current_amount ?? 0;
-                            const max = gap.max_amount ?? 100;
-                            const pct = Math.min(100, Math.round((current / max) * 100));
+                            const current = parseFloat(String(gap.current_amount ?? 0));
+                            const rda = parseFloat(String(gap.rda_amount ?? 0));
+                            const pct = rda > 0 ? Math.min(100, Math.round((current / rda) * 100)) : 0;
+                            const rdaDisplay = rda > 0 ? rda : '-';
                             return (
                               <div key={gap.nutrient_id}>
                                 <div className="flex justify-between items-center mb-1">
@@ -242,7 +241,7 @@ export function RecommendationResult() {
                                     style={{ width: `${pct}%` }}
                                   />
                                 </div>
-                                <p className="text-xs text-gray-400 mt-0.5">{pct}% 충족 (목표 {max}{gap.unit})</p>
+                                <p className="text-xs text-gray-400 mt-0.5">{pct}% 충족 (목표 {rdaDisplay}{gap.unit})</p>
                               </div>
                             );
                           })}
@@ -259,7 +258,6 @@ export function RecommendationResult() {
                   <h3 className="text-base font-bold text-gray-900">
                     3) 추천 상품
                   </h3>
-                  <span className="text-xs text-gray-500">부족분 충족을 목표로 추천</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
