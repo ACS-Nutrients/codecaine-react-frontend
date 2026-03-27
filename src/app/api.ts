@@ -132,9 +132,19 @@ export const api = {
   // Analysis
   getAnalysisHistory: (cognitoId: string, limit = 10, offset = 0) =>
     request(`/chatbot/analysis/history?cognito_id=${cognitoId}&limit=${limit}&offset=${offset}`),
+  saveConditionSnapshot: (cognito_id: string, purposes: string[]) =>
+    request(`/users/${cognito_id}/condition-snapshot`, { method: "POST", body: JSON.stringify({ purposes }) }),
   startAnalysis: (data: {
     cognito_id: string;
-    health_check_data: { exam_date: string; gender: number; age: number; height: number; weight: number };
+    health_check_data: {
+      exam_date: string;
+      gender: number;
+      age: number;
+      height: number;
+      weight: number;
+      exam_items: { name: string; value: string; unit: string }[];
+    };
+    prescription_data: { name: string; dose: string; usage: string }[];
     purposes: string[];
   }) => request("/analysis/calculate", { method: "POST", body: JSON.stringify(data) }),
   getAnalysisResult: (resultId: number, cognitoId: string) =>
