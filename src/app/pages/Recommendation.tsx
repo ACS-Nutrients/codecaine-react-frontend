@@ -1380,6 +1380,7 @@ export function Recommendation() {
     try {
       const cognitoId = getCognitoId() || 'dev-user-001';
       const hd = collectedHealthData;
+      await api.saveConditionSnapshot(cognitoId, purposes);
       const result = await api.startAnalysis({
         cognito_id: cognitoId,
         health_check_data: {
@@ -1389,7 +1390,9 @@ export function Recommendation() {
           age: parseInt(hd?.age || '0') || 0,
           height: parseFloat(hd?.height || '0') || 0,
           weight: parseFloat(hd?.weight || '0') || 0,
+          exam_items: codefExamItems.map(({ name, value, unit }) => ({ name, value, unit })),
         },
+        prescription_data: (hd?.meds || []).map(({ name, dose, schedule }) => ({ name, dose, usage: schedule })),
         purposes,
       });
       navigate(`/recommendation-result?result_id=${result.result_id}`, {
@@ -1413,11 +1416,6 @@ export function Recommendation() {
     setSavedSuccess(true);
   };
 
-  /* ── background gradient ── */
-  const bgGradient =
-    step === 'health'
-      ? 'from-slate-50 via-blue-50 to-indigo-50'
-      : 'from-[#EEF2FF] via-[#E0E7FF] to-[#DBEAFE]';
 
   return (
     <div
