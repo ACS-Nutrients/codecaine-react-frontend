@@ -2,6 +2,27 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router';
 import { useState, useEffect } from 'react';
 import { api, getCognitoId } from '../api';
 
+// summary 텍스트 "[라벨] 내용" 형식 파싱
+function parseSummary(text: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const regex = /\[([^\]]+)\]\s*/g;
+  const parts = text.split(regex).filter(Boolean);
+  for (let i = 0; i < parts.length - 1; i += 2) {
+    result[parts[i].trim()] = (parts[i + 1] ?? '').trim();
+  }
+  return result;
+}
+
+const SECTION_CONFIG: Record<string, { icon: string; label: string; bg: string; border: string; textColor: string }> = {
+  '섭취 목적':     { icon: '🎯', label: '섭취 목적',    bg: 'bg-blue-50',   border: 'border-blue-200',   textColor: 'text-blue-800' },
+  '전반적 평가':   { icon: '📋', label: '전반적 평가',  bg: 'bg-green-50',  border: 'border-green-200',  textColor: 'text-green-800' },
+  '주요 우려사항': { icon: '⚠️', label: '주요 우려사항', bg: 'bg-amber-50',  border: 'border-amber-200',  textColor: 'text-amber-800' },
+  '생활습관':      { icon: '🏃', label: '생활습관',     bg: 'bg-purple-50', border: 'border-purple-200', textColor: 'text-purple-800' },
+  '필요 영양소':   { icon: '💊', label: '필요 영양소',  bg: 'bg-indigo-50', border: 'border-indigo-200', textColor: 'text-indigo-800' },
+  '복용 약물':     { icon: '💉', label: '복용 약물',    bg: 'bg-rose-50',   border: 'border-rose-200',   textColor: 'text-rose-800' },
+  '섭취 중인 영양제': { icon: '🧴', label: '현재 영양제', bg: 'bg-teal-50',  border: 'border-teal-200',   textColor: 'text-teal-800' },
+};
+
 
 interface AnalysisResult {
   cognito_id: string;
@@ -218,38 +239,72 @@ export function RecommendationResult() {
                       부족 영양군과 필요 함량을 산출했습니다.
                     </p>
 
-                    <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50/80 text-sm text-gray-800 leading-relaxed">
-                      <div className="mb-3 whitespace-pre-line">
-                        {analysisData?.summary ?? '현재 등록된 복용 영양제 기준으로 영양소 섭취량을 분석하여, 개인 상태 및 검진 요약 지표를 반영한 목표 섭취량 대비 부족분을 계산했습니다.'}
-                      </div>
-
-                      {analysisData?.nutrient_gaps && analysisData.nutrient_gaps.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
-                          <span className="font-bold text-gray-600 block">부족 영양소 분석:</span>
-                          {analysisData.nutrient_gaps.map((gap) => {
-                            const current = parseFloat(String(gap.current_amount ?? 0));
-                            const rda = parseFloat(String(gap.rda_amount ?? 0));
-                            const pct = rda > 0 ? Math.min(100, Math.round((current / rda) * 100)) : 0;
-                            const rdaDisplay = rda > 0 ? rda : '-';
+                    {/* summary 구조화 카드 */}
+                    {analysisData?.summary ? (() => {
+                      const parsed = parseSummary(analysisData.summary);
+                      const ORDER = ['전반적 평가', '주요 우려사항', '생활습관', '섭취 목적', '필요 영양소', '복용 약물', '섭취 중인 영양제'];
+                      const keys = ORDER.filter(k => parsed[k]);
+                      return (
+                        <div className="space-y-2">
+                          {keys.map(key => {
+                            const cfg = SECTION_CONFIG[key] ?? { icon: '📌', label: key, bg: 'bg-gray-50', border: 'border-gray-200', textColor: 'text-gray-800' };
+                            const val = parsed[key];
+                            const isWarning = key === '주요 우려사항';
+                            const items = isWarning ? val.split(/,\s*(?=[가-힣A-Z])/).filter(Boolean) : null;
                             return (
-                              <div key={gap.nutrient_id}>
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-xs font-semibold text-gray-700">{gap.name_ko}</span>
-                                  <span className="text-xs text-red-500 font-medium">{gap.gap_amount}{gap.unit} 부족</span>
+                              <div key={key} className={`rounded-xl border ${cfg.border} ${cfg.bg} px-4 py-3`}>
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className="text-base leading-none">{cfg.icon}</span>
+                                  <span className={`text-xs font-bold ${cfg.textColor}`}>{cfg.label}</span>
                                 </div>
-                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-blue-500 rounded-full transition-all duration-700"
-                                    style={{ width: `${pct}%` }}
-                                  />
-                                </div>
-                                <p className="text-xs text-gray-400 mt-0.5">{pct}% 충족 (목표 {rdaDisplay}{gap.unit})</p>
+                                {items ? (
+                                  <ul className="space-y-1">
+                                    {items.map((item, i) => (
+                                      <li key={i} className="flex gap-1.5 text-xs text-gray-700 leading-relaxed">
+                                        <span className="text-amber-500 mt-0.5 flex-shrink-0">•</span>
+                                        <span>{item.trim()}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-xs text-gray-700 leading-relaxed">{val}</p>
+                                )}
                               </div>
                             );
                           })}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })() : (
+                      <p className="text-sm text-gray-500">분석 요약 정보가 없습니다.</p>
+                    )}
+
+                    {/* 부족 영양소 갭 바 */}
+                    {analysisData?.nutrient_gaps && analysisData.nutrient_gaps.length > 0 && (
+                      <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-4 space-y-3">
+                        <span className="text-xs font-bold text-gray-600 block">📊 부족 영양소 분석</span>
+                        {analysisData.nutrient_gaps.map((gap) => {
+                          const current = parseFloat(String(gap.current_amount ?? 0));
+                          const rda = parseFloat(String(gap.rda_amount ?? 0));
+                          const pct = rda > 0 ? Math.min(100, Math.round((current / rda) * 100)) : 0;
+                          const rdaDisplay = rda > 0 ? rda : '-';
+                          return (
+                            <div key={gap.nutrient_id}>
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs font-semibold text-gray-700">{gap.name_ko}</span>
+                                <span className="text-xs text-red-500 font-medium">{gap.gap_amount}{gap.unit} 부족</span>
+                              </div>
+                              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-blue-500 rounded-full transition-all duration-700"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                              <p className="text-xs text-gray-400 mt-0.5">{pct}% 충족 (목표 {rdaDisplay}{gap.unit})</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
