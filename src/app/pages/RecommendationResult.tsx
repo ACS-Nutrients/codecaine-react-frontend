@@ -239,7 +239,7 @@ export function RecommendationResult() {
                   {sections.map(([key, val]) => {
 
                     if (key === '섭취 목적') {
-                      const purposes = val.split(/[,·\s]+/).filter(Boolean);
+                      const purposes = val.split(/[,·]+/).map(s => s.trim()).filter(Boolean);
                       return (
                         <div key={key} className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-semibold text-gray-400">섭취 목적</span>
@@ -393,7 +393,7 @@ export function RecommendationResult() {
                       </span>
                       <span className="text-xs text-gray-400">{product.product_brand}</span>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900 leading-snug">{product.product_name}</p>
+                    <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{product.product_name}</p>
                     <p className="text-xs text-gray-400">1일 {product.recommend_serving ?? product.serving_per_day}정</p>
                     {Object.keys(product.nutrients ?? {}).length > 0 && (
                       <div className="flex flex-wrap gap-1">
