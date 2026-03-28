@@ -2,26 +2,15 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router';
 import { useState, useEffect } from 'react';
 import { api, getCognitoId } from '../api';
 
-// summary 텍스트 "[라벨] 내용" 형식 파싱
-function parseSummary(text: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  const regex = /\[([^\]]+)\]\s*/g;
-  const parts = text.split(regex).filter(Boolean);
+// summary 텍스트 "[라벨] 내용" 형식을 순서 유지하며 파싱
+function parseSummary(text: string): [string, string][] {
+  const parts = text.split(/\[([^\]]+)\]\s*/).filter(Boolean);
+  const result: [string, string][] = [];
   for (let i = 0; i < parts.length - 1; i += 2) {
-    result[parts[i].trim()] = (parts[i + 1] ?? '').trim();
+    result.push([parts[i].trim(), (parts[i + 1] ?? '').trim()]);
   }
   return result;
 }
-
-const SECTION_CONFIG: Record<string, { icon: string; label: string; bg: string; border: string; textColor: string }> = {
-  '섭취 목적':     { icon: '🎯', label: '섭취 목적',    bg: 'bg-blue-50',   border: 'border-blue-200',   textColor: 'text-blue-800' },
-  '전반적 평가':   { icon: '📋', label: '전반적 평가',  bg: 'bg-green-50',  border: 'border-green-200',  textColor: 'text-green-800' },
-  '주요 우려사항': { icon: '⚠️', label: '주요 우려사항', bg: 'bg-amber-50',  border: 'border-amber-200',  textColor: 'text-amber-800' },
-  '생활습관':      { icon: '🏃', label: '생활습관',     bg: 'bg-purple-50', border: 'border-purple-200', textColor: 'text-purple-800' },
-  '필요 영양소':   { icon: '💊', label: '필요 영양소',  bg: 'bg-indigo-50', border: 'border-indigo-200', textColor: 'text-indigo-800' },
-  '복용 약물':     { icon: '💉', label: '복용 약물',    bg: 'bg-rose-50',   border: 'border-rose-200',   textColor: 'text-rose-800' },
-  '섭취 중인 영양제': { icon: '🧴', label: '현재 영양제', bg: 'bg-teal-50',  border: 'border-teal-200',   textColor: 'text-teal-800' },
-};
 
 
 interface AnalysisResult {
@@ -239,49 +228,120 @@ export function RecommendationResult() {
                       부족 영양군과 필요 함량을 산출했습니다.
                     </p>
 
-                    {/* summary 구조화 카드 */}
+                    {/* summary 구조화 렌더링 */}
                     {analysisData?.summary ? (() => {
-                      const parsed = parseSummary(analysisData.summary);
-                      const ORDER = ['전반적 평가', '주요 우려사항', '생활습관', '섭취 목적', '필요 영양소', '복용 약물', '섭취 중인 영양제'];
-                      const keys = ORDER.filter(k => parsed[k]);
+                      const sections = parseSummary(analysisData.summary);
                       return (
-                        <div className="space-y-2">
-                          {keys.map(key => {
-                            const cfg = SECTION_CONFIG[key] ?? { icon: '📌', label: key, bg: 'bg-gray-50', border: 'border-gray-200', textColor: 'text-gray-800' };
-                            const val = parsed[key];
-                            const isWarning = key === '주요 우려사항';
-                            const items = isWarning ? val.split(/,\s*(?=[가-힣A-Z])/).filter(Boolean) : null;
-                            return (
-                              <div key={key} className={`rounded-xl border ${cfg.border} ${cfg.bg} px-4 py-3`}>
-                                <div className="flex items-center gap-1.5 mb-1">
-                                  <span className="text-base leading-none">{cfg.icon}</span>
-                                  <span className={`text-xs font-bold ${cfg.textColor}`}>{cfg.label}</span>
+                        <div className="space-y-3">
+                          {sections.map(([key, val]) => {
+                            if (key === '섭취 목적') {
+                              const purposes = val.split(/[,·\s]+/).filter(Boolean);
+                              return (
+                                <div key={key} className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">섭취 목적</span>
+                                  {purposes.map((p, i) => (
+                                    <span key={i} className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">{p}</span>
+                                  ))}
                                 </div>
-                                {items ? (
-                                  <ul className="space-y-1">
-                                    {items.map((item, i) => (
-                                      <li key={i} className="flex gap-1.5 text-xs text-gray-700 leading-relaxed">
-                                        <span className="text-amber-500 mt-0.5 flex-shrink-0">•</span>
-                                        <span>{item.trim()}</span>
-                                      </li>
+                              );
+                            }
+                            if (key === '복용 약물') {
+                              const drugs = val.split(/,\s*/).filter(Boolean);
+                              return (
+                                <div key={key} className="rounded-2xl border border-rose-200 bg-rose-50/60 px-4 py-3">
+                                  <p className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-3">💊 복용 약물 <span className="font-normal">({drugs.length}종)</span></p>
+                                  <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                                    {drugs.map((d, i) => (
+                                      <div key={i} className="flex items-start gap-2">
+                                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-rose-400 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700 leading-relaxed break-all">{d.trim()}</span>
+                                      </div>
                                     ))}
-                                  </ul>
-                                ) : (
-                                  <p className="text-xs text-gray-700 leading-relaxed">{val}</p>
-                                )}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            if (key === '섭취 중인 영양제') {
+                              const supps = val === '없음' ? [] : val.split(/,\s*/).filter(Boolean);
+                              return (
+                                <div key={key} className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">현재 영양제</span>
+                                  {supps.length === 0
+                                    ? <span className="text-sm text-gray-400 italic">섭취 중인 영양제 없음</span>
+                                    : supps.map((s, i) => <span key={i} className="px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-sm">{s}</span>)
+                                  }
+                                </div>
+                              );
+                            }
+                            if (key === '전반적 평가') {
+                              return (
+                                <div key={key} className="rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 px-5 py-4 text-white">
+                                  <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-2">전반적 평가</p>
+                                  <p className="text-sm leading-relaxed font-medium">{val}</p>
+                                </div>
+                              );
+                            }
+                            if (key === '주요 우려사항') {
+                              const items = val.split(/,\s*(?=[가-힣A-Z\[])/).filter(Boolean);
+                              return (
+                                <div key={key}>
+                                  <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">⚠ 주요 우려사항</p>
+                                  <div className="space-y-2">
+                                    {items.map((item, i) => (
+                                      <div key={i} className="flex gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+                                        <span className="text-amber-500 font-bold text-sm flex-shrink-0 mt-0.5">!</span>
+                                        <p className="text-sm text-gray-800 leading-relaxed">{item.trim()}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            if (key === '생활습관') {
+                              return (
+                                <div key={key} className="border-l-4 border-purple-400 pl-4 py-1">
+                                  <p className="text-xs font-semibold text-purple-500 uppercase tracking-wider mb-1.5">생활습관 조언</p>
+                                  <p className="text-sm text-gray-700 leading-relaxed">{val}</p>
+                                </div>
+                              );
+                            }
+                            if (key === '필요 영양소') {
+                              // "비타민 B1 (티아민) 1.1mg" → name + amount 분리
+                              const nutrients = val.split(/,\s*/).filter(Boolean).map(n => {
+                                const m = n.trim().match(/^(.+?)\s+([\d.]+\s*(?:mg|mcg|μg|IU|g|kcal|RAE\s*\S*))$/i);
+                                return m ? { name: m[1].trim(), amount: m[2].trim() } : { name: n.trim(), amount: '' };
+                              });
+                              return (
+                                <div key={key}>
+                                  <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">✦ 필요 영양소</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {nutrients.map((n, i) => (
+                                      <div key={i} className="flex items-center justify-between rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-2 gap-2">
+                                        <span className="text-sm font-medium text-gray-800 truncate">{n.name}</span>
+                                        {n.amount && <span className="text-sm font-bold text-indigo-600 flex-shrink-0">{n.amount}</span>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={key} className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                                <p className="text-xs font-semibold text-gray-400 mb-1">{key}</p>
+                                <p className="text-sm text-gray-700 leading-relaxed">{val}</p>
                               </div>
                             );
                           })}
                         </div>
                       );
                     })() : (
-                      <p className="text-sm text-gray-500">분석 요약 정보가 없습니다.</p>
+                      <p className="text-sm text-gray-400">분석 요약 정보가 없습니다.</p>
                     )}
 
                     {/* 부족 영양소 갭 바 */}
                     {analysisData?.nutrient_gaps && analysisData.nutrient_gaps.length > 0 && (
-                      <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-4 space-y-3">
-                        <span className="text-xs font-bold text-gray-600 block">📊 부족 영양소 분석</span>
+                      <div className="mt-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 space-y-4">
+                        <p className="text-sm font-bold text-gray-700">부족 영양소 분석</p>
                         {analysisData.nutrient_gaps.map((gap) => {
                           const current = parseFloat(String(gap.current_amount ?? 0));
                           const rda = parseFloat(String(gap.rda_amount ?? 0));
@@ -289,17 +349,17 @@ export function RecommendationResult() {
                           const rdaDisplay = rda > 0 ? rda : '-';
                           return (
                             <div key={gap.nutrient_id}>
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-xs font-semibold text-gray-700">{gap.name_ko}</span>
-                                <span className="text-xs text-red-500 font-medium">{gap.gap_amount}{gap.unit} 부족</span>
+                              <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-sm font-semibold text-gray-800">{gap.name_ko}</span>
+                                <span className="text-sm font-bold text-red-500">{gap.gap_amount}{gap.unit} 부족</span>
                               </div>
-                              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-blue-500 rounded-full transition-all duration-700"
+                                  className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-700"
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
-                              <p className="text-xs text-gray-400 mt-0.5">{pct}% 충족 (목표 {rdaDisplay}{gap.unit})</p>
+                              <p className="text-xs text-gray-400 mt-1">{pct}% 충족 · 목표 {rdaDisplay}{gap.unit}</p>
                             </div>
                           );
                         })}
