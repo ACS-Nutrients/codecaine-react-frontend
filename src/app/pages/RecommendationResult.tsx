@@ -67,7 +67,7 @@ export function RecommendationResult() {
         ]);
         setAnalysisData(analysis);
         setRecommendations(rec?.recommendations ?? []);
-        setUserName(profile?.user_name ?? profile?.name ?? profile?.username ?? null);
+        setUserName(profile?.user_name ?? profile?.name ?? profile?.username ?? profile?.email ?? null);
         setHealthData(hd ?? {});
       } catch (err) {
         console.error('Failed to fetch analysis result:', err);
@@ -109,7 +109,9 @@ export function RecommendationResult() {
             </div>
 
             <div className="flex items-center gap-3 px-4 py-3 rounded-full border border-gray-200 bg-white/85 shadow-lg">
-              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-bold" />
+              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-bold">
+                {userName ? userName.charAt(0).toUpperCase() : '?'}
+              </div>
               <div className="flex flex-col gap-0.5">
                 <b className="text-sm text-gray-900">{userName ?? analysisData?.cognito_id ?? '-'}</b>
                 <span className="text-xs text-gray-500">
