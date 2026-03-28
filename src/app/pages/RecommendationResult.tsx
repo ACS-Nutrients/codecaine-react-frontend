@@ -12,6 +12,54 @@ function parseSummary(text: string): [string, string][] {
   return result;
 }
 
+interface UnifiedGap {
+  name: string;
+  unit: string;
+  current: number;
+  gap: number;
+  rda: number;
+}
+
+// summary [필요 영양소]를 기반으로 DB gaps와 병합 — DB 미매핑 영양소도 포함
+function buildUnifiedGaps(
+  summary: string,
+  dbGaps: AnalysisResult['nutrient_gaps'],
+): UnifiedGap[] {
+  const sections = parseSummary(summary);
+  const nutrientSection = sections.find(([k]) => k === '필요 영양소');
+  if (!nutrientSection) {
+    return (dbGaps ?? []).map(g => ({
+      name: g.name_ko ?? '',
+      unit: g.unit ?? '',
+      current: parseFloat(String(g.current_amount ?? 0)),
+      gap: parseFloat(String(g.gap_amount ?? 0)),
+      rda: parseFloat(String(g.rda_amount ?? 0)),
+    }));
+  }
+
+  const summaryItems = nutrientSection[1].split(/,\s*/).filter(Boolean).map(n => {
+    const m = n.trim().match(/^(.+?)\s+([\d.]+)\s*(mg|mcg|μg|IU|g|kcal|RAE\S*)$/i);
+    return m
+      ? { name: m[1].trim(), rda: parseFloat(m[2]), unit: m[3].trim() }
+      : { name: n.trim(), rda: 0, unit: '' };
+  });
+
+  const dbByName: Record<string, NonNullable<AnalysisResult['nutrient_gaps']>[number]> = {};
+  for (const g of dbGaps ?? []) {
+    if (g.name_ko) dbByName[g.name_ko] = g;
+  }
+
+  return summaryItems.map(n => {
+    const db = dbByName[n.name];
+    if (db) {
+      const current = parseFloat(String(db.current_amount ?? 0));
+      const gap = parseFloat(String(db.gap_amount ?? 0));
+      return { name: n.name, unit: db.unit ?? n.unit, current, gap, rda: gap + current || n.rda };
+    }
+    return { name: n.name, unit: n.unit, current: 0, gap: n.rda, rda: n.rda };
+  });
+}
+
 
 interface AnalysisResult {
   cognito_id: string;
@@ -299,30 +347,31 @@ export function RecommendationResult() {
               );
             })() : <p className="text-sm text-gray-400">분석 요약 정보가 없습니다.</p>}
 
-            {/* 부족 영양소 갭 바 */}
-            {analysisData?.nutrient_gaps && analysisData.nutrient_gaps.length > 0 && (
-              <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-4 space-y-4">
-                <p className="text-sm font-semibold text-gray-700">부족 영양소</p>
-                {analysisData.nutrient_gaps.map((gap) => {
-                  const current = parseFloat(String(gap.current_amount ?? 0));
-                  const rda = parseFloat(String(gap.rda_amount ?? 0));
-                  const pct = rda > 0 ? Math.min(100, Math.round((current / rda) * 100)) : 0;
-                  const rdaDisplay = rda > 0 ? rda : '-';
-                  return (
-                    <div key={gap.nutrient_id}>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-sm font-semibold text-gray-800">{gap.name_ko}</span>
-                        <span className="text-sm font-bold text-red-400">{gap.gap_amount}{gap.unit} 부족</span>
+            {/* 부족 영양소 갭 바 — 필요 영양소 전체 기준 */}
+            {analysisData?.summary && (() => {
+              const unified = buildUnifiedGaps(analysisData.summary, analysisData.nutrient_gaps);
+              if (unified.length === 0) return null;
+              return (
+                <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-4 space-y-4">
+                  <p className="text-sm font-semibold text-gray-700">부족 영양소</p>
+                  {unified.map((gap) => {
+                    const pct = gap.rda > 0 ? Math.min(100, Math.round((gap.current / gap.rda) * 100)) : 0;
+                    return (
+                      <div key={gap.name}>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-sm font-semibold text-gray-800">{gap.name}</span>
+                          <span className="text-sm font-bold text-red-400">{gap.gap}{gap.unit} 부족</span>
+                        </div>
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">{pct}% 충족 · 목표 {gap.rda > 0 ? gap.rda : '—'}{gap.unit}</p>
                       </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">{pct}% 충족 · 목표 {rdaDisplay}{gap.unit}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
