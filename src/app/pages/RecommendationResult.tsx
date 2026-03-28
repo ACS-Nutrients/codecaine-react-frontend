@@ -84,7 +84,7 @@ interface Recommendation {
   serving_per_day?: number;
   recommend_serving?: number;
   rank: number;
-  nutrients: Record<string, number>;
+  nutrients: Record<string, string>;
 }
 
 interface ExamItem {
