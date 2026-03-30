@@ -25,11 +25,11 @@ export function Chatbot() {
     if (!cognitoId || !token) return;
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/chatbot/${resultId}?cognito_id=${cognitoId}`;
+    const wsUrl = `${protocol}//${window.location.host}/ws/chatbot/${resultId}?cognito_id=${cognitoId}&token=${token || ''}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'auth', token }));
+      console.log('WebSocket connected');
     };
 
     ws.onmessage = (event) => {
@@ -67,7 +67,7 @@ export function Chatbot() {
     setMessage('');
     setIsLoading(true);
 
-    wsRef.current.send(JSON.stringify({ type: 'message', message: userMessage }));
+    wsRef.current.send(JSON.stringify({ message: userMessage }));
   };
 
   return (
