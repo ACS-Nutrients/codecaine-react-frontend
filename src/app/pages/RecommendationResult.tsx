@@ -251,6 +251,22 @@ export function RecommendationResult() {
                             const val = parsed[key];
                             const isWarning = key === '주요 우려사항';
                             const items = isWarning ? val.split(/,\s*(?=[가-힣A-Z])/).filter(Boolean) : null;
+
+                            let lifestyleParsed: Record<string, string> | null = null;
+                            if (key === '생활습관') {
+                              try {
+                                const c = JSON.parse(val);
+                                if (c && typeof c === 'object' && !Array.isArray(c)) lifestyleParsed = c;
+                              } catch { /* plain string */ }
+                            }
+
+                            const LIFESTYLE_FIELDS: { field: string; icon: string; label: string }[] = [
+                              { field: 'diet',              icon: '🥗', label: '식단' },
+                              { field: 'exercise',          icon: '🏃', label: '운동' },
+                              { field: 'sleep',             icon: '😴', label: '수면' },
+                              { field: 'supplement_timing', icon: '💊', label: '복용 타이밍' },
+                            ];
+
                             return (
                               <div key={key} className={`rounded-xl border ${cfg.border} ${cfg.bg} px-4 py-3`}>
                                 <div className="flex items-center gap-1.5 mb-1">
@@ -265,6 +281,21 @@ export function RecommendationResult() {
                                         <span>{item.trim()}</span>
                                       </li>
                                     ))}
+                                  </ul>
+                                ) : lifestyleParsed ? (
+                                  <ul className="space-y-2 mt-1">
+                                    {LIFESTYLE_FIELDS.map(({ field, icon, label }) => {
+                                      const text = lifestyleParsed![field];
+                                      if (!text) return null;
+                                      return (
+                                        <li key={field} className="flex gap-2">
+                                          <span className="flex-shrink-0 text-sm">{icon}</span>
+                                          <span className="text-xs text-gray-700 leading-relaxed">
+                                            <b className="text-gray-500 font-semibold">{label}: </b>{text}
+                                          </span>
+                                        </li>
+                                      );
+                                    })}
                                   </ul>
                                 ) : (
                                   <p className="text-xs text-gray-700 leading-relaxed">{val}</p>
