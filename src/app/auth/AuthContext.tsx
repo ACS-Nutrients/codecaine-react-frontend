@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setToken(token);
     setCognitoId(payload.sub);
+    if (payload.iat) localStorage.setItem('last_login_at', String(payload.iat));
     setUser(authUser);
   }, []);
 
