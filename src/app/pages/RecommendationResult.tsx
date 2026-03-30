@@ -1,7 +1,10 @@
 import { useNavigate, useSearchParams, useLocation } from 'react-router';
 import { useState, useEffect } from 'react';
 import { api, getCognitoId } from '../api';
-import { FlaskConical, ShieldAlert, Leaf, Pill, ChevronRight, MessageCircle, Trophy } from 'lucide-react';
+import {
+  FlaskConical, ShieldAlert, Leaf, ChevronRight,
+  MessageCircle, Trophy, Target, AlertCircle,
+} from 'lucide-react';
 
 // summary 텍스트 "[라벨] 내용" 형식 파싱
 function parseSummary(text: string): Record<string, string> {
@@ -14,15 +17,15 @@ function parseSummary(text: string): Record<string, string> {
   return result;
 }
 
-const SECTION_CONFIG: Record<string, { icon: React.ReactNode; label: string }> = {
-  '전반적 평가':      { icon: <FlaskConical className="w-4 h-4" />,  label: '전반적 평가' },
-  '주요 우려사항':    { icon: <ShieldAlert  className="w-4 h-4" />,  label: '주요 우려사항' },
-  '생활습관':         { icon: <Leaf         className="w-4 h-4" />,  label: '생활습관' },
-  '섭취 목적':        { icon: <Pill         className="w-4 h-4" />,  label: '섭취 목적' },
-  '필요 영양소':      { icon: <Pill         className="w-4 h-4" />,  label: '필요 영양소' },
-  '복용 약물':        { icon: <Pill         className="w-4 h-4" />,  label: '복용 약물' },
-  '섭취 중인 영양제': { icon: <Pill         className="w-4 h-4" />,  label: '현재 영양제' },
-};
+// "[영양소 이유]" 필드 파싱: "영양소명:이유|영양소명:이유" → Record<string, string>
+function parseNutrientReasons(text: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  text.split('|').forEach(item => {
+    const idx = item.indexOf(':');
+    if (idx > 0) result[item.slice(0, idx).trim()] = item.slice(idx + 1).trim();
+  });
+  return result;
+}
 
 const LIFESTYLE_FIELDS = [
   { field: 'diet',              emoji: '🥗', label: '식단' },
@@ -67,9 +70,9 @@ interface ExamItem {
 }
 
 const RANK_STYLES = [
-  { accent: 'bg-yellow-400', badge: 'bg-yellow-400', label: '1위' },
-  { accent: 'bg-gray-300',   badge: 'bg-gray-400',   label: '2위' },
-  { accent: 'bg-orange-300', badge: 'bg-orange-400', label: '3위' },
+  { accent: 'bg-yellow-400', badge: 'bg-yellow-400' },
+  { accent: 'bg-gray-300',   badge: 'bg-gray-400'   },
+  { accent: 'bg-orange-300', badge: 'bg-orange-400' },
 ];
 
 export function RecommendationResult() {
@@ -81,11 +84,10 @@ export function RecommendationResult() {
   const examItems: ExamItem[] = (location.state as any)?.examItems ?? [];
   const examDate: string      = (location.state as any)?.examDate ?? '';
 
-  const [analysisData,     setAnalysisData]     = useState<AnalysisResult | null>(null);
-  const [recommendations,  setRecommendations]  = useState<Recommendation[]>([]);
-  const [userName,         setUserName]         = useState<string | null>(null);
-  const [healthData,       setHealthData]       = useState<Record<string, any>>({});
-  const [isLoading,        setIsLoading]        = useState(true);
+  const [analysisData,    setAnalysisData]    = useState<AnalysisResult | null>(null);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [userName,        setUserName]        = useState<string | null>(null);
+  const [isLoading,       setIsLoading]       = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,16 +95,14 @@ export function RecommendationResult() {
       const cognitoId = getCognitoId();
       if (!cognitoId) { setIsLoading(false); return; }
       try {
-        const [analysis, rec, profile, hd] = await Promise.all([
+        const [analysis, rec, profile] = await Promise.all([
           api.getAnalysisResult(Number(resultId), cognitoId),
           api.getRecommendations(Number(resultId), cognitoId),
           api.getProfile(cognitoId).catch(() => null),
-          api.getHealthData(cognitoId).catch(() => ({})),
         ]);
         setAnalysisData(analysis);
         setRecommendations(rec?.recommendations ?? []);
         setUserName(profile?.user_name ?? profile?.name ?? profile?.username ?? profile?.email ?? null);
-        setHealthData(hd ?? {});
       } catch (err) {
         console.error('Failed to fetch analysis result:', err);
       } finally {
@@ -126,11 +126,13 @@ export function RecommendationResult() {
     );
   }
 
-  const hc: Record<string, any> = healthData?.codef_health_data ?? healthData ?? {};
+  const summary = analysisData?.summary ?? '';
+  const parsed  = parseSummary(summary);
+  const nutrientReasons = parseNutrientReasons(parsed['영양소 이유'] ?? '');
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* ── Header ── */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-white/50 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
         <div>
           <h1 className="text-xl font-bold text-gray-900">분석 리포트</h1>
@@ -150,13 +152,215 @@ export function RecommendationResult() {
 
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-5">
 
-        {/* ── Section 1: 건강검진 결과 ── */}
-        <div className="group relative bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-blue-400 rounded-t-2xl" />
+        {/* ── 1. 분석 개요 ── */}
+        <div className="relative bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-blue-500 rounded-t-2xl" />
           <div className="p-6">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-50">
-                <FlaskConical className="w-5 h-5 text-blue-500" />
+                <Target className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900">분석 개요</h2>
+                <p className="text-xs text-gray-400">입력된 건강 정보 요약</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
+                <p className="text-xs font-semibold text-blue-400 mb-1.5">🎯 섭취 목적</p>
+                <p className="text-sm text-gray-800 leading-relaxed">{parsed['섭취 목적'] || '-'}</p>
+              </div>
+              <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3">
+                <p className="text-xs font-semibold text-indigo-400 mb-1.5">💊 필요 영양소</p>
+                <p className="text-sm text-gray-800 leading-relaxed">{parsed['필요 영양소'] || '-'}</p>
+              </div>
+              <div className="rounded-xl bg-rose-50 border border-rose-100 px-4 py-3">
+                <p className="text-xs font-semibold text-rose-400 mb-1.5">💉 복용 약물</p>
+                <p className="text-sm text-gray-800 leading-relaxed">{parsed['복용 약물'] || '없음'}</p>
+              </div>
+              <div className="rounded-xl bg-teal-50 border border-teal-100 px-4 py-3">
+                <p className="text-xs font-semibold text-teal-400 mb-1.5">🧴 현재 영양제</p>
+                <p className="text-sm text-gray-800 leading-relaxed">{parsed['섭취 중인 영양제'] || '없음'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── 2. AI 분석 요약 (전반적 평가 / 주요 우려사항 / 생활습관) ── */}
+        <div className="relative bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-indigo-400 rounded-t-2xl" />
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-50">
+                <ShieldAlert className="w-5 h-5 text-indigo-500" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900">AI 분석 요약</h2>
+                <p className="text-xs text-gray-400">건강 상태 종합 평가</p>
+              </div>
+            </div>
+
+            {summary ? (
+              <div className="space-y-5">
+                {/* 전반적 평가 */}
+                {parsed['전반적 평가'] && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2 text-gray-500">
+                      <FlaskConical className="w-4 h-4" />
+                      <span className="text-xs font-semibold">전반적 평가</span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-4 py-3">
+                      {parsed['전반적 평가']}
+                    </p>
+                  </div>
+                )}
+
+                {/* 주요 우려사항 */}
+                {parsed['주요 우려사항'] && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2 text-gray-500">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="text-xs font-semibold">주요 우려사항</span>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {parsed['주요 우려사항'].split(/,\s*(?=[가-힣A-Z])/).filter(Boolean).map((item, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-gray-700 leading-relaxed">
+                          <span className="text-orange-400 flex-shrink-0 mt-0.5">•</span>
+                          <span>{item.trim()}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* 생활습관 */}
+                {parsed['생활습관'] && (() => {
+                  let lifestyleParsed: Record<string, string> | null = null;
+                  try {
+                    const c = JSON.parse(parsed['생활습관']);
+                    if (c && typeof c === 'object' && !Array.isArray(c)) lifestyleParsed = c;
+                  } catch { /* plain string */ }
+
+                  return (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2 text-gray-500">
+                        <Leaf className="w-4 h-4" />
+                        <span className="text-xs font-semibold">생활습관 조언</span>
+                      </div>
+                      {lifestyleParsed ? (
+                        <ul className="space-y-2">
+                          {LIFESTYLE_FIELDS.map(({ field, emoji, label }) => {
+                            const text = lifestyleParsed![field];
+                            if (!text) return null;
+                            return (
+                              <li key={field} className="flex gap-2.5 text-sm text-gray-700 leading-relaxed">
+                                <span className="flex-shrink-0 text-base">{emoji}</span>
+                                <span>
+                                  <b className="text-gray-500 font-medium">{label}: </b>{text}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-700 leading-relaxed">{parsed['생활습관']}</p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">분석 요약 정보가 없습니다.</p>
+            )}
+          </div>
+        </div>
+
+        {/* ── 3. 부족 영양소 (카드) ── */}
+        {analysisData?.nutrient_gaps && analysisData.nutrient_gaps.length > 0 && (
+          <div className="relative bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-green-400 rounded-t-2xl" />
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-green-50">
+                  <Leaf className="w-5 h-5 text-green-500" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-900">부족 영양소</h2>
+                  <p className="text-xs text-gray-400">개인화된 목표량 기준 분석</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {analysisData.nutrient_gaps.map((gap) => {
+                  const current = parseFloat(String(gap.current_amount ?? 0));
+                  const rda     = parseFloat(String(gap.rda_amount ?? 0));
+                  const gapAmt  = parseFloat(String(gap.gap_amount ?? 0));
+                  const pct     = rda > 0 ? Math.min(100, Math.round((current / rda) * 100)) : 0;
+                  const reason  = nutrientReasons[gap.name_ko ?? ''];
+
+                  const statusCls = pct >= 70
+                    ? 'text-yellow-700 bg-yellow-50 border-yellow-200'
+                    : pct >= 40
+                    ? 'text-orange-700 bg-orange-50 border-orange-200'
+                    : 'text-red-700 bg-red-50 border-red-200';
+                  const dotCls = pct >= 70 ? 'bg-yellow-400' : pct >= 40 ? 'bg-orange-400' : 'bg-red-400';
+
+                  return (
+                    <div key={gap.nutrient_id} className="rounded-xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-2.5">
+                      {/* 이름 */}
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">{gap.name_ko}</p>
+                        {gap.name_en && <p className="text-xs text-gray-400 mt-0.5">{gap.name_en}</p>}
+                      </div>
+
+                      {/* 이유 */}
+                      {reason && (
+                        <p className="text-xs text-indigo-700 bg-indigo-50 rounded-lg px-2.5 py-1.5 leading-relaxed border border-indigo-100">
+                          {reason}
+                        </p>
+                      )}
+
+                      {/* 수치 (현재 → 목표) */}
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="flex-1 text-center rounded-lg bg-white border border-gray-100 py-1.5">
+                          <p className="text-gray-400 text-[10px] mb-0.5">현재</p>
+                          <p className="font-semibold text-gray-700">{current}{gap.unit}</p>
+                        </div>
+                        <span className="text-gray-300 text-sm">→</span>
+                        <div className="flex-1 text-center rounded-lg bg-white border border-gray-100 py-1.5">
+                          <p className="text-gray-400 text-[10px] mb-0.5">목표</p>
+                          <p className="font-semibold text-gray-700">{rda > 0 ? `${rda}${gap.unit}` : '-'}</p>
+                        </div>
+                      </div>
+
+                      {/* 충족률 + 부족량 */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-2 h-2 rounded-full ${dotCls}`} />
+                          <span className="text-xs text-gray-500">충족률 <b className="text-gray-700">{pct}%</b></span>
+                        </div>
+                        {gapAmt > 0 && (
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${statusCls}`}>
+                            {gapAmt}{gap.unit} 부족
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── 4. 건강검진 결과 (CODEF) ── */}
+        <div className="relative bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-blue-300 rounded-t-2xl" />
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-50">
+                <FlaskConical className="w-5 h-5 text-blue-400" />
               </div>
               <div>
                 <h2 className="text-base font-bold text-gray-900">건강검진 결과</h2>
@@ -210,132 +414,8 @@ export function RecommendationResult() {
           </div>
         </div>
 
-        {/* ── Section 2: 분석 요약 ── */}
-        <div className="group relative bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-indigo-400 rounded-t-2xl" />
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-50">
-                <ShieldAlert className="w-5 h-5 text-indigo-500" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-gray-900">분석 요약</h2>
-                <p className="text-xs text-gray-400">AI가 분석한 건강 상태</p>
-              </div>
-            </div>
-
-            {analysisData?.summary ? (() => {
-              const parsed = parseSummary(analysisData.summary);
-              const ORDER = ['전반적 평가', '주요 우려사항', '생활습관', '섭취 목적', '필요 영양소', '복용 약물', '섭취 중인 영양제'];
-              const keys = ORDER.filter(k => parsed[k]);
-              return (
-                <div className="space-y-4">
-                  {keys.map(key => {
-                    const cfg = SECTION_CONFIG[key] ?? { icon: null, label: key };
-                    const val = parsed[key];
-                    const isWarning = key === '주요 우려사항';
-                    const items = isWarning ? val.split(/,\s*(?=[가-힣A-Z])/).filter(Boolean) : null;
-
-                    let lifestyleParsed: Record<string, string> | null = null;
-                    if (key === '생활습관') {
-                      try {
-                        const c = JSON.parse(val);
-                        if (c && typeof c === 'object' && !Array.isArray(c)) lifestyleParsed = c;
-                      } catch { /* plain string */ }
-                    }
-
-                    return (
-                      <div key={key}>
-                        <div className="flex items-center gap-1.5 mb-1.5 text-gray-500">
-                          {cfg.icon}
-                          <span className="text-xs font-semibold">{cfg.label}</span>
-                        </div>
-                        {items ? (
-                          <ul className="space-y-1 pl-1">
-                            {items.map((item, i) => (
-                              <li key={i} className="flex gap-2 text-xs text-gray-700 leading-relaxed">
-                                <span className="text-gray-300 flex-shrink-0">•</span>
-                                <span>{item.trim()}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : lifestyleParsed ? (
-                          <ul className="space-y-1.5 pl-1">
-                            {LIFESTYLE_FIELDS.map(({ field, emoji, label }) => {
-                              const text = lifestyleParsed![field];
-                              if (!text) return null;
-                              return (
-                                <li key={field} className="flex gap-2 text-xs text-gray-700 leading-relaxed">
-                                  <span className="flex-shrink-0">{emoji}</span>
-                                  <span><b className="text-gray-500 font-semibold">{label}: </b>{text}</span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        ) : (
-                          <p className="text-xs text-gray-700 leading-relaxed pl-1">{val}</p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })() : (
-              <p className="text-sm text-gray-400">분석 요약 정보가 없습니다.</p>
-            )}
-          </div>
-        </div>
-
-        {/* ── Section 3: 부족 영양소 ── */}
-        {analysisData?.nutrient_gaps && analysisData.nutrient_gaps.length > 0 && (
-          <div className="group relative bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-green-400 rounded-t-2xl" />
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-green-50">
-                  <Leaf className="w-5 h-5 text-green-500" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">부족 영양소</h2>
-                  <p className="text-xs text-gray-400">목표 섭취량 대비 현재 충족률</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {analysisData.nutrient_gaps.map((gap) => {
-                  const current = parseFloat(String(gap.current_amount ?? 0));
-                  const rda     = parseFloat(String(gap.rda_amount ?? 0));
-                  const pct     = rda > 0 ? Math.min(100, Math.round((current / rda) * 100)) : 0;
-                  const rdaDisplay = rda > 0 ? rda : '-';
-                  const barColor = pct >= 70 ? 'bg-green-400' : pct >= 40 ? 'bg-yellow-400' : 'bg-red-400';
-                  return (
-                    <div key={gap.nutrient_id}>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-sm font-semibold text-gray-800">{gap.name_ko}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400">{pct}% 충족</span>
-                          <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-0.5 rounded-full">
-                            {gap.gap_amount}{gap.unit} 부족
-                          </span>
-                        </div>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${barColor} rounded-full transition-all duration-700`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">목표 {rdaDisplay}{gap.unit}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Section 4: 추천 상품 ── */}
-        <div className="group relative bg-white rounded-2xl shadow-lg overflow-hidden">
+        {/* ── 5. 추천 영양제 ── */}
+        <div className="relative bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-400 rounded-t-2xl" />
           <div className="p-6">
             <div className="flex items-center gap-3 mb-5">
@@ -351,9 +431,12 @@ export function RecommendationResult() {
             {recommendations.length > 0 ? (
               <div className="grid grid-cols-3 gap-3">
                 {recommendations.map((product) => {
-                  const rs = RANK_STYLES[product.rank - 1] ?? { accent: 'bg-blue-300', badge: 'bg-blue-400', label: `${product.rank}위` };
+                  const rs = RANK_STYLES[product.rank - 1] ?? { accent: 'bg-blue-300', badge: 'bg-blue-400' };
                   return (
-                    <div key={product.rec_id} className="relative bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-4 flex flex-col gap-2.5 overflow-hidden">
+                    <div
+                      key={product.rec_id}
+                      className="relative bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-4 flex flex-col gap-2.5 overflow-hidden"
+                    >
                       <div className={`absolute top-0 left-0 right-0 h-0.5 ${rs.accent}`} />
                       <div className="flex items-center justify-between">
                         <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${rs.badge} text-white text-xs font-bold`}>
