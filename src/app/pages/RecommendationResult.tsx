@@ -308,6 +308,10 @@ export function RecommendationResult() {
                     상담으로 확인 ›
                   </button>
                 </div>
+
+                <p className="mt-4 text-xs text-gray-400 leading-relaxed">
+                  본 추천 결과는 개인 건강검진 데이터를 기반으로 한 참고 정보이며, 의학적 진단이나 처방을 대체하지 않습니다. 영양제 복용 전 전문 약사 또는 의사와 상담하시기 바랍니다.
+                </p>
               </section>
             </div>
           </article>
