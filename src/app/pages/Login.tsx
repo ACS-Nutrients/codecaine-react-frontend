@@ -32,14 +32,11 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md">
         {/* 로고 */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-500 rounded-2xl mb-4">
-            <div className="w-8 h-8 border-3 border-white rounded-full border-2" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Portal</h1>
+          <img src="/logo-layout.png" alt="로고" className="w-48 h-48 object-contain mx-auto mb-2" />
           <p className="text-gray-500 text-sm mt-1">영양제 추천 서비스</p>
         </div>
 

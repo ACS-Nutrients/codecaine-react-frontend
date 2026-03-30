@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, Smile, User } from 'lucide-react';
 import { useSearchParams } from 'react-router';
-import { api, getCognitoId } from '../api';
+import { getCognitoId, getToken } from '../api';
 
 interface ChatMessage {
   type: 'user' | 'bot';
@@ -16,105 +16,124 @@ export function Chatbot() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      if (!resultId) return;
-      const cognitoId = getCognitoId();
-      if (!cognitoId) return;
-      try {
-        const data: { result_id: string; messages: ChatMessage[] } = await api.getChatHistory(resultId, cognitoId);
-        setMessages(data.messages);
-      } catch (err) {
-        console.error('Failed to fetch chat history:', err);
+    if (!resultId) return;
+    const cognitoId = getCognitoId();
+    const token = getToken();
+    if (!cognitoId || !token) return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/chatbot/${resultId}?cognito_id=${cognitoId}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'auth', token }));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'ping') {
+        ws.send(JSON.stringify({ type: 'pong' }));
+      } else if (data.type === 'history') {
+        setMessages(data.messages || []);
+      } else if (data.type === 'bot') {
+        setMessages(prev => [...prev, { type: 'bot', content: data.content, timestamp: data.timestamp }]);
+        setIsLoading(false);
       }
     };
-    fetchHistory();
+
+    ws.onerror = () => setIsLoading(false);
+    ws.onclose = () => setIsLoading(false);
+
+    wsRef.current = ws;
+
+    return () => {
+      ws.close();
+    };
   }, [resultId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!message.trim() || !resultId) return;
+  const handleSend = () => {
+    if (!message.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
     const userMessage = message;
-    setMessages(prev => [...prev, { type: 'user', content: userMessage }]);
+    const timestamp = new Date().toISOString();
+    setMessages(prev => [...prev, { type: 'user', content: userMessage, timestamp }]);
     setMessage('');
     setIsLoading(true);
 
-    try {
-      const cognitoId = getCognitoId();
-      if (!cognitoId) {
-        setIsLoading(false);
-        return;
-      }
-
-      const data: { bot_message: string; timestamp: string } = await api.sendChatMessage(cognitoId, resultId, userMessage);
-      setMessages(prev => [...prev, {
-        type: 'bot',
-        content: data.bot_message,
-        timestamp: data.timestamp
-      }]);
-    } catch (err) {
-      console.error('Failed to send message:', err);
-    } finally {
-      setIsLoading(false);
-    }
+    wsRef.current.send(JSON.stringify({ type: 'message', message: userMessage }));
   };
 
   return (
     <div className="h-screen flex flex-col bg-white">
-      <header className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">영양제 추천 결과</h1>
-        <div className="flex items-center gap-3">
-          <User className="w-5 h-5 text-gray-400" />
+      <header className="border-b border-gray-100 px-6 py-4 flex items-center gap-3">
+        <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center">
+          <Smile className="w-4 h-4 text-blue-400" />
+        </div>
+        <div>
+          <h1 className="text-base font-bold text-gray-900 leading-tight">AI 영양제 상담</h1>
+          <p className="text-xs text-gray-400">분석 결과를 기반으로 질문하세요</p>
         </div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50">
-        <div className="max-w-3xl mx-auto space-y-6">
+        <div className="max-w-3xl mx-auto space-y-5">
+          {messages.length === 0 && !isLoading && (
+            <div className="text-center py-16 animate-fade-up">
+              <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Smile className="w-7 h-7 text-blue-400" />
+              </div>
+              <p className="text-gray-500 text-sm font-medium">무엇이든 물어보세요</p>
+              <p className="text-gray-300 text-xs mt-1">분석 결과에 대해 궁금한 점을 질문해보세요.</p>
+            </div>
+          )}
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex items-start gap-3 ${msg.type === 'user' ? 'flex-row-reverse' : ''
-                }`}
+              className={`flex items-end gap-3 animate-fade-up ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}
             >
               {msg.type === 'bot' && (
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-5 h-5 text-gray-500" />
+                <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 mb-1">
+                  <Smile className="w-4 h-4 text-blue-400" />
                 </div>
               )}
 
               <div
-                className={`max-w-md rounded-2xl px-5 py-3 ${msg.type === 'bot'
-                  ? 'bg-white shadow-sm border border-gray-200'
-                  : 'bg-blue-500 text-white'
+                className={`max-w-md rounded-2xl px-4 py-3 text-sm ${msg.type === 'bot'
+                  ? 'bg-white border border-gray-100 shadow-sm text-gray-800 rounded-bl-sm'
+                  : 'bg-blue-500 text-white rounded-br-sm'
                   }`}
               >
-                <p className={msg.type === 'bot' ? 'text-gray-800' : 'text-white'}>
-                  {msg.content}
-                </p>
+                <p className="leading-relaxed">{msg.content}</p>
                 {msg.timestamp && (
-                  <p className="text-xs text-gray-400 mt-1">{msg.timestamp}</p>
+                  <p className={`text-xs mt-1.5 ${msg.type === 'bot' ? 'text-gray-300' : 'text-blue-200'}`}>
+                    {new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 )}
               </div>
 
               {msg.type === 'user' && (
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-5 h-5 text-white" />
+                <div className="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 mb-1">
+                  <User className="w-4 h-4 text-white" />
                 </div>
               )}
             </div>
           ))}
           {isLoading && (
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-5 h-5 text-gray-500" />
+            <div className="flex items-end gap-3">
+              <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 mb-1">
+                <Smile className="w-4 h-4 text-blue-400" />
               </div>
-              <div className="bg-white shadow-sm border border-gray-200 rounded-2xl px-5 py-3">
-                <p className="text-gray-400">...</p>
+              <div className="bg-white border border-gray-100 shadow-sm rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           )}
@@ -122,29 +141,24 @@ export function Chatbot() {
         </div>
       </div>
 
-      <div className="border-t border-gray-200 px-6 py-4 bg-white">
+      <div className="border-t border-gray-100 px-6 py-4 bg-white">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 bg-gray-100 rounded-full px-5 py-3">
-            <button className="text-gray-400 hover:text-gray-600 transition-colors">
-              <Smile className="w-5 h-5" />
-            </button>
-
+          <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-50 transition-all">
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
               placeholder="메시지를 입력하세요..."
-              className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400"
+              className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400 text-sm"
               disabled={isLoading}
             />
-
             <button
               onClick={handleSend}
-              className="text-blue-500 hover:text-blue-600 transition-colors disabled:opacity-50"
-              disabled={isLoading}
+              disabled={isLoading || !message.trim()}
+              className="w-8 h-8 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-200 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-95 disabled:cursor-not-allowed"
             >
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4 text-white" />
             </button>
           </div>
         </div>

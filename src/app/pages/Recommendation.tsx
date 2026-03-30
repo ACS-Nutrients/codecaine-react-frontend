@@ -40,12 +40,7 @@ async function hashRRN(rrn: string): Promise<string> {
 /* ─────────────────────────────── Portal Logo ─────────────────────────────── */
 function PortalLogo() {
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center relative overflow-hidden shadow">
-        <div className="w-5 h-5 border-2 border-white rounded-full" />
-      </div>
-      <span className="font-bold text-lg text-gray-900">Portal</span>
-    </div>
+    <img src="/logo-layout.png" alt="로고" className="w-36 h-36 object-contain" />
   );
 }
 
@@ -110,7 +105,7 @@ function StepInfo({
         {/* Illustration */}
         <div className="flex justify-center mb-8">
           <div className="relative w-32 h-32">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full" />
+            <div className="absolute inset-0 bg-blue-100 rounded-full" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex flex-col items-center gap-1">
                 <div className="w-10 h-10 bg-blue-300 rounded-full flex items-center justify-center">
@@ -147,7 +142,12 @@ function StepInfo({
           먼저 수정해주세요.
         </p>
         <p className="text-center text-gray-400 mb-8" style={{ fontSize: '12px' }}>
-          마지막 업데이트: 2024.04.10
+          마지막 접속시간: {(() => {
+            const iat = localStorage.getItem('last_login_at');
+            if (!iat) return '-';
+            const d = new Date(Number(iat) * 1000);
+            return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+          })()}
         </p>
 
         {savedSuccess && (
@@ -174,17 +174,6 @@ function StepInfo({
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-4 mt-6">
-        {['영양제 복용 기록', '알러지 정보', '기저질환 정보'].map((label) => (
-          <div
-            key={label}
-            className="px-3 py-1.5 bg-white/60 backdrop-blur-sm rounded-full text-gray-600 border border-white/80"
-            style={{ fontSize: '12px' }}
-          >
-            {label}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -312,7 +301,7 @@ function StepCodefInfo({
   onSubmit,
   onBack,
 }: {
-  onSubmit: (info: CodefUserInfo) => void;
+  onSubmit: (info: CodefUserInfo, gender: 'male' | 'female') => void;
   onBack: () => void;
 }) {
   const [form, setForm] = useState<CodefFormInput>({
@@ -321,6 +310,8 @@ function StepCodefInfo({
     identity: '',
     rrn: '',
   });
+  const [rrnFront, setRrnFront] = useState('');
+  const [rrnBack, setRrnBack] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -329,18 +320,21 @@ function StepCodefInfo({
   };
 
   const handleSubmit = async () => {
-    if (!form.user_name || !form.phone_no || !form.identity || !form.rrn) {
+    if (!form.user_name || !form.phone_no || !form.identity || !rrnFront || !rrnBack) {
       setError('모든 항목을 입력해주세요.');
       return;
     }
+    const rrn = rrnFront + rrnBack;
     setError('');
     setLoading(true);
     // 주민등록번호는 브라우저에서 해시 처리 후 원본 폐기
     // onSubmit 호출 즉시 화면이 전환되므로 catch 불필요 (에러는 부모에서 처리)
-    const nhis_id = await hashRRN(form.rrn);
+    const nhis_id = await hashRRN(rrn);
     const { rrn: _, ...rest } = form;
+    const genderDigit = parseInt(rrnBack[0]);
+    const gender: 'male' | 'female' = genderDigit % 2 === 1 ? 'male' : 'female';
     // type="date" 입력값은 "YYYY-MM-DD" 형식이므로 CODEF 전송 전 YYYYMMDD로 변환
-    onSubmit({ ...rest, identity: rest.identity.replace(/-/g, ''), nhis_id });
+    onSubmit({ ...rest, identity: rest.identity.replace(/-/g, ''), nhis_id }, gender);
   };
 
   return (
@@ -363,7 +357,6 @@ function StepCodefInfo({
             { label: '이름', key: 'user_name' as const, placeholder: '홍길동', type: 'text' },
             { label: '휴대폰 번호', key: 'phone_no' as const, placeholder: '01012345678 (- 없이)', type: 'tel' },
             { label: '생년월일', key: 'identity' as const, placeholder: '', type: 'date' },
-            { label: '주민등록번호', key: 'rrn' as const, placeholder: '13자리 (- 없이)', type: 'password' },
           ].map(({ label, key, placeholder, type }) => (
             <div key={key}>
               <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -377,6 +370,30 @@ function StepCodefInfo({
               />
             </div>
           ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">주민등록번호</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={rrnFront}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRrnFront(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="생년월일 6자리"
+                maxLength={6}
+                autoComplete="off"
+                className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <span className="text-gray-500 font-bold">-</span>
+              <input
+                type="password"
+                value={rrnBack}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRrnBack(e.target.value.replace(/\D/g, '').slice(0, 7))}
+                placeholder="●●●●●●●"
+                maxLength={7}
+                autoComplete="off"
+                className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+          </div>
           <p className="text-xs text-gray-400">
             주민등록번호는 이 기기에서 즉시 암호화되며 서버로 전송되지 않습니다.
           </p>
@@ -482,29 +499,40 @@ function StepCodefAuth({
           </>
         )}
 
-        {error && (
-          <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg mb-4">{error}</p>
+        {/* 데이터 조회 중 로딩 화면 */}
+        {loading ? (
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-800 font-semibold text-base">건강 데이터를 가져오는 중입니다...</p>
+            <p className="text-gray-400 text-sm text-center">
+              건강검진 결과와 처방 기록을 불러오고 있어요.
+              <br />최대 30초 정도 소요될 수 있습니다.
+            </p>
+          </div>
+        ) : (
+          <>
+            {error && (
+              <p className="text-red-500 text-sm bg-red-50 px-3 py-2 rounded-lg mb-4">{error}</p>
+            )}
+            <div className="flex flex-col gap-3">
+              {!initLoading && !initError && (
+                <button
+                  onClick={onConfirm}
+                  className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  인증 완료, 데이터 가져오기
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={onBack}
+                className="w-full py-3 border-2 border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50"
+              >
+                다시 입력하기
+              </button>
+            </div>
+          </>
         )}
-
-        <div className="flex flex-col gap-3">
-          {/* init 완료 시에만 "인증 완료" 버튼 노출 */}
-          {!initLoading && !initError && (
-            <button
-              onClick={onConfirm}
-              disabled={loading}
-              className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-200 text-gray-900 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {loading ? '데이터 조회 중...' : '인증 완료, 데이터 가져오기'}
-              {!loading && <ChevronRight className="w-5 h-5" />}
-            </button>
-          )}
-          <button
-            onClick={onBack}
-            className="w-full py-3 border-2 border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50"
-          >
-            다시 입력하기
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -542,14 +570,13 @@ function StepHealth({
   onConfirm,
   onBack,
   initialExamItems = [],
-  initialMeds = [],
   initialHealthSummary = {},
+  initialMeds = [],
   noCodefData = false,
 }: {
   onConfirm: (data: HealthFormData) => void;
   onBack: () => void;
   initialExamItems?: ExamItem[];
-  initialMeds?: MedItem[];
   initialHealthSummary?: {
     height?: string;
     weight?: string;
@@ -557,6 +584,7 @@ function StepHealth({
     gender?: string;
     age?: string;
   };
+  initialMeds?: MedItem[];
   noCodefData?: boolean;
 }) {
   const [gender, setGender] = useState<'male' | 'female'>('male');
@@ -574,7 +602,7 @@ function StepHealth({
   }, [initialExamItems]);
 
   useEffect(() => {
-    setMeds(initialMeds);
+    if (initialMeds.length > 0) setMeds(initialMeds);
   }, [initialMeds]);
 
   // CODEF에서 받아온 기본 건강 정보로 입력 폼을 자동 채운다
@@ -799,13 +827,13 @@ function StepHealth({
               </button>
             </div>
 
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="text-left text-gray-500 font-medium pb-2">약품명</th>
-                  <th className="text-left text-gray-500 font-medium pb-2">용량</th>
-                  <th className="text-left text-gray-500 font-medium pb-2">복용 주기</th>
-                  <th className="text-gray-500 font-medium pb-2">수정</th>
+                  <th className="text-left text-gray-500 font-medium pb-2 w-[40%]">약품명</th>
+                  <th className="text-left text-gray-500 font-medium pb-2 w-[22%]">용량</th>
+                  <th className="text-left text-gray-500 font-medium pb-2 w-[28%]">복용 주기</th>
+                  <th className="text-gray-500 font-medium pb-2 w-[10%]">수정</th>
                 </tr>
               </thead>
               <tbody>
@@ -848,9 +876,9 @@ function StepHealth({
                   ) : (
                     // 일반 표시 행
                     <tr key={med.id} className="border-b border-gray-50">
-                      <td className="py-2.5 text-gray-800">{med.name}</td>
-                      <td className="py-2.5 text-gray-700">{med.dose}</td>
-                      <td className="py-2.5 text-gray-600">{med.schedule}</td>
+                      <td className="py-2.5 text-gray-800 break-words">{med.name}</td>
+                      <td className="py-2.5 text-gray-700 break-words">{med.dose}</td>
+                      <td className="py-2.5 text-gray-600 break-words">{med.schedule}</td>
                       <td className="py-2.5">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -909,10 +937,10 @@ function StepHealth({
               </tbody>
             </table>
 
-            {/* 기타 독이사항 */}
+            {/* 기타 특이사항 */}
             <div className="mt-5">
               <h3 className="font-bold text-gray-900 mb-2" style={{ fontSize: '14px' }}>
-                기타 독이사항
+                기타 특이사항
               </h3>
               <div className="relative">
                 <textarea
@@ -1209,15 +1237,12 @@ export function Recommendation() {
 
   // CODEF 상태
   const [codefUserInfo, setCodefUserInfo] = useState<CodefUserInfo | null>(null);
-  // init 응답 — 2way 인증 정보 + fetch 단계에서 재사용할 년도/날짜 범위 포함
+  // init 응답 — 건강검진 2way 인증 정보 + fetch 단계에서 재사용할 년도 범위 포함
   const [twoWayData, setTwoWayData] = useState<{
     health_check_two_way: object;
-    prescription_two_way: object;
     token: string;
     hc_start_year?: string;
     hc_end_year?: string;
-    presc_start?: string;
-    presc_end?: string;
   } | null>(null);
   // 1단계(init): 카카오 인증 요청 전송 중 로딩 — 화면은 즉시 전환하고 백그라운드에서 완료 대기
   const [codefInitLoading, setCodefInitLoading] = useState(false);
@@ -1226,7 +1251,7 @@ export function Recommendation() {
   const [codefAuthLoading, setCodefAuthLoading] = useState(false);
   const [codefAuthError, setCodefAuthError] = useState('');
   const [codefExamItems, setCodefExamItems] = useState<any[]>([]);
-  const [codefMeds, setCodefMeds] = useState<any[]>([]);
+  const [codefMedications, setCodefMedications] = useState<MedItem[]>([]);
   // CODEF에서 받아온 기본 건강 정보 — 건강정보 입력 폼 자동 채움용
   const [codefHealthSummary, setCodefHealthSummary] = useState<{
     height?: string;
@@ -1266,7 +1291,8 @@ export function Recommendation() {
     }
   };
 
-  const handleCodefInfoSubmit = async (info: CodefUserInfo) => {
+  const handleCodefInfoSubmit = async (info: CodefUserInfo, gender: 'male' | 'female') => {
+    setCodefHealthSummary(prev => ({ ...prev, gender }));
     // 화면을 즉시 전환한 뒤 백그라운드에서 codefInit(카카오 인증 요청 전송) 완료를 기다린다.
     // — 기존에는 API 완료 후 전환해서 사용자가 오래 기다려야 했음
     setCodefUserInfo(info);
@@ -1298,17 +1324,13 @@ export function Recommendation() {
         cognito_id: cognitoId,
         user_info: codefUserInfo,
         health_check_two_way: twoWayData.health_check_two_way,
-        prescription_two_way: twoWayData.prescription_two_way,
         token: twoWayData.token,
-        // init 단계에서 결정된 년도·날짜 범위를 그대로 전달 — 2-way 인증은 동일 파라미터 필수
         hc_start_year: twoWayData.hc_start_year,
         hc_end_year: twoWayData.hc_end_year,
-        presc_start: twoWayData.presc_start,
-        presc_end: twoWayData.presc_end,
       });
-      // CODEF 원본 데이터는 백엔드에서 S3에 저장됨 — 검진 항목/처방만 state에 보관
+      // CODEF 원본 데이터는 백엔드에서 S3에 저장됨 — 검진 항목만 state에 보관
       setCodefExamItems(data.exam_items || []);
-      setCodefMeds(data.medications || []);
+      setCodefMedications(data.medications || []);
 
       // S3에 저장된 health_summary를 불러와 폼 채움
       // — 나이는 identity(생년월일 YYYYMMDD)로 계산하여 추가
@@ -1327,13 +1349,13 @@ export function Recommendation() {
           ) age -= 1;
           summary.age = String(age);
         }
-        setCodefHealthSummary(summary);
+        setCodefHealthSummary(prev => ({ gender: prev.gender, ...summary }));
         const hasData = (data.exam_items || []).length > 0 || summary.height;
         setCodefNoData(!hasData);
       } catch {
         // S3 로드 실패 시 codefFetch 응답에서 직접 사용
         const summary = data.health_summary || {};
-        setCodefHealthSummary(summary);
+        setCodefHealthSummary(prev => ({ gender: prev.gender, ...summary }));
         setCodefNoData(!(data.exam_items?.length > 0 || summary.height));
       }
 
@@ -1358,6 +1380,7 @@ export function Recommendation() {
     try {
       const cognitoId = getCognitoId() || 'dev-user-001';
       const hd = collectedHealthData;
+      await api.saveConditionSnapshot(cognitoId, purposes);
       const result = await api.startAnalysis({
         cognito_id: cognitoId,
         health_check_data: {
@@ -1367,10 +1390,14 @@ export function Recommendation() {
           age: parseInt(hd?.age || '0') || 0,
           height: parseFloat(hd?.height || '0') || 0,
           weight: parseFloat(hd?.weight || '0') || 0,
+          exam_items: codefExamItems.map(({ name, value, unit }) => ({ name, value, unit })),
         },
+        prescription_data: (hd?.meds || []).map(({ name, dose, schedule }) => ({ name, dose, usage: schedule })),
         purposes,
       });
-      navigate(`/recommendation-result?result_id=${result.result_id}`);
+      navigate(`/recommendation-result?result_id=${result.result_id}`, {
+        state: { examItems: codefExamItems, examDate: hd?.exam_date || '' },
+      });
     } catch {
       setTimeout(() => navigate('/recommendation-result'), 2800);
     }
@@ -1389,20 +1416,11 @@ export function Recommendation() {
     setSavedSuccess(true);
   };
 
-  /* ── background gradient ── */
-  const bgGradient =
-    step === 'health'
-      ? 'from-slate-50 via-blue-50 to-indigo-50'
-      : 'from-[#EEF2FF] via-[#E0E7FF] to-[#DBEAFE]';
 
   return (
     <div
-      className={`min-h-screen flex items-center justify-center p-8 relative bg-gradient-to-br ${bgGradient} transition-all duration-500`}
+      className="min-h-screen flex items-center justify-center p-8 bg-gray-50"
     >
-      {/* Decorative blobs */}
-      <div className="absolute top-16 right-24 w-64 h-64 bg-blue-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-16 left-16 w-48 h-48 bg-purple-200/20 rounded-full blur-3xl pointer-events-none" />
-
       {/* Fade wrapper */}
       <div
         className="relative z-10 w-full flex justify-center transition-all duration-300"
@@ -1447,8 +1465,8 @@ export function Recommendation() {
             onConfirm={handleHealthConfirm}
             onBack={handleHealthBack}
             initialExamItems={codefExamItems}
-            initialMeds={codefMeds}
             initialHealthSummary={codefHealthSummary}
+            initialMeds={codefMedications}
             noCodefData={codefNoData}
           />
         )}

@@ -132,9 +132,19 @@ export const api = {
   // Analysis
   getAnalysisHistory: (cognitoId: string, limit = 10, offset = 0) =>
     request(`/chatbot/analysis/history?cognito_id=${cognitoId}&limit=${limit}&offset=${offset}`),
+  saveConditionSnapshot: (cognito_id: string, purposes: string[]) =>
+    request(`/users/${cognito_id}/condition-snapshot`, { method: "POST", body: JSON.stringify({ purposes }) }),
   startAnalysis: (data: {
     cognito_id: string;
-    health_check_data: { exam_date: string; gender: number; age: number; height: number; weight: number };
+    health_check_data: {
+      exam_date: string;
+      gender: number;
+      age: number;
+      height: number;
+      weight: number;
+      exam_items: { name: string; value: string; unit: string }[];
+    };
+    prescription_data: { name: string; dose: string; usage: string }[];
     purposes: string[];
   }) => request("/analysis/calculate", { method: "POST", body: JSON.stringify(data) }),
   getAnalysisResult: (resultId: number, cognitoId: string) =>
@@ -148,18 +158,15 @@ export const api = {
     phone_no: string;
     identity: string;
     nhis_id: string;
-  }) => request("/codef/init", { method: "POST", body: JSON.stringify(userInfo) }),
+  }) => request("/users/codef/init", { method: "POST", body: JSON.stringify(userInfo) }),
   codefFetch: (payload: {
     cognito_id: string;
     user_info: object;
     health_check_two_way: object;
-    prescription_two_way: object;
     token: string;
     hc_start_year?: string;
     hc_end_year?: string;
-    presc_start?: string;
-    presc_end?: string;
-  }) => request("/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
+  }) => request("/users/codef/fetch", { method: "POST", body: JSON.stringify(payload) }),
 
   // Chatbot
   getChatHistory: (resultId: string, cognitoId: string) =>
@@ -170,5 +177,5 @@ export const api = {
       body: JSON.stringify({ cognito_id: cognitoId, result_id: resultId, message }),
     }),
   getHealthData: (cognitoId: string) =>
-    request(`/codef/health-data/${cognitoId}`),
+    request(`/users/codef/health-data/${cognitoId}`),
 };

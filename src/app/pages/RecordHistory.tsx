@@ -149,23 +149,27 @@ export function RecordHistory() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">로딩 중...</p>
+      <div className="min-h-screen p-8">
+        <div className="max-w-7xl mx-auto space-y-4">
+          <div className="skeleton h-8 w-48 rounded-lg" />
+          <div className="skeleton h-5 w-72 rounded-lg" />
+          <div className="skeleton h-[500px] w-full rounded-2xl mt-4" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-red-500">오류: {error}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-400 text-sm">오류: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-4">
+    <div className="min-h-screen p-8">
+      <div className="max-w-7xl mx-auto space-y-4 animate-fade-up">
 
         {/* 재구매 알림 배너 */}
         {lowStockSupplements.length > 0 && (
@@ -182,10 +186,10 @@ export function RecordHistory() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm p-8 w-full max-w-5xl mx-auto relative">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 w-full max-w-5xl mx-auto relative">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">영양제 섭취 기록</h1>
-            <p className="text-gray-600">스캔된 영양제 정보를 기반으로 매일 복용 기록을 관리하세요.</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-1">영양제 섭취 기록</h1>
+            <p className="text-gray-400 text-sm">스캔된 영양제 정보를 기반으로 매일 복용 기록을 관리하세요.</p>
           </div>
 
           <div className="flex items-center justify-between mb-6">

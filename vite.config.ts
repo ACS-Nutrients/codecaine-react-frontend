@@ -27,10 +27,11 @@ export default defineConfig({
       // chatbot service (:8002)
       '/api/chatbot': { target: process.env.CHATBOT_SERVICE_URL || 'http://localhost:8002', changeOrigin: true },
       '/api/auth': { target: process.env.CHATBOT_SERVICE_URL || 'http://localhost:8002', changeOrigin: true },
+      '/ws/chatbot': { target: process.env.CHATBOT_SERVICE_URL?.replace('http', 'ws') || 'ws://localhost:8002', ws: true, changeOrigin: true },
       // analysis service (:8001)
       '/api/analysis': { target: process.env.ANALYSIS_SERVICE_URL || 'http://localhost:8001', changeOrigin: true },
       // codef service (:8001)
-      '/api/codef': { target: process.env.ANALYSIS_SERVICE_URL || 'http://localhost:8001', changeOrigin: true },
+      // '/api/users/codef': { target: process.env.MYPAGE_SERVICE_URL || 'http://localhost:8003', changeOrigin: true },
     },
   },
   assetsInclude: ['**/*.svg', '**/*.csv'],
