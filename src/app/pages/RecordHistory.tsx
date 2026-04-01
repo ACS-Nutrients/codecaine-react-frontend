@@ -41,7 +41,7 @@ export function RecordHistory() {
       color: COLORS[idx % COLORS.length],
       dailyLimit: s.itk_serving_per_day ?? 1,
       records: recordMap[s.current_id] ?? {},
-      remainingCount: s.remaining_count ?? null,
+      remainingCount: s.itk_total_quantity ?? null,
       lowStock: s.low_stock ?? false,
     }));
   }, []);
@@ -312,21 +312,22 @@ export function RecordHistory() {
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-4 h-4 ${supplement.color} rounded-full`} />
-                          <div className="text-left">
-                            <span className={`text-sm font-medium block ${isComplete ? 'text-gray-400' : 'text-gray-700'}`}>
-                              {supplement.name}
-                            </span>
-                            <span className={`text-[10px] font-medium flex items-center gap-0.5 ${supplement.lowStock ? 'text-amber-600' : 'text-gray-400'}`}>
-                              {supplement.lowStock && <AlertTriangle className="w-3 h-3" />}
-                              {supplement.remainingCount !== null ? `잔여 ${supplement.remainingCount}회분` : ''}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-base font-bold ${isComplete ? 'text-gray-400' : count > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
-                            {count}/{supplement.dailyLimit}
+                          <span className={`text-sm font-medium ${isComplete ? 'text-gray-400' : 'text-gray-700'}`}>
+                            {supplement.name}
                           </span>
-                          {isComplete && <Check className="w-5 h-5 text-gray-400" />}
+                        </div>
+                        <div className="flex flex-col items-end gap-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-base font-bold ${isComplete ? 'text-gray-400' : count > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+                              {count}/{supplement.dailyLimit}
+                            </span>
+                            {isComplete && <Check className="w-5 h-5 text-gray-400" />}
+                          </div>
+                          {supplement.remainingCount !== null && (
+                            <span className={`text-[11px] font-medium ${supplement.lowStock ? 'text-amber-500' : 'text-gray-400'}`}>
+                              잔여 {supplement.remainingCount}회분
+                            </span>
+                          )}
                         </div>
                       </button>
                     );
