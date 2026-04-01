@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, X, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, AlertTriangle, Check } from 'lucide-react';
 import { api, getCognitoId } from '../api';
 
 const COLORS = [
@@ -283,11 +283,10 @@ export function RecordHistory() {
                     return (
                       <button
                         key={supplement.id}
-                        onClick={() => !isComplete && handleSupplementClick(supplement.id, selectedDate)}
-                        disabled={isComplete}
+                        onClick={() => handleSupplementClick(supplement.id, selectedDate)}
                         className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                           isComplete
-                            ? 'border-gray-300 bg-gray-200 cursor-not-allowed opacity-60'
+                            ? 'border-green-400 bg-green-50 hover:bg-green-100'
                             : count > 0
                             ? 'border-blue-400 bg-blue-50 hover:bg-blue-100'
                             : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'
@@ -296,7 +295,7 @@ export function RecordHistory() {
                         <div className="flex items-center gap-3">
                           <div className={`w-4 h-4 ${supplement.color} rounded-full`} />
                           <div className="text-left">
-                            <span className={`text-sm font-medium block ${isComplete ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
+                            <span className={`text-sm font-medium block ${isComplete ? 'text-green-700' : 'text-gray-700'}`}>
                               {supplement.name}
                             </span>
                             <span className={`text-[10px] font-medium flex items-center gap-0.5 ${supplement.lowStock ? 'text-amber-600' : 'text-gray-400'}`}>
@@ -305,16 +304,19 @@ export function RecordHistory() {
                             </span>
                           </div>
                         </div>
-                        <span className={`text-base font-bold ${isComplete ? 'text-gray-500' : count > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
-                          {count}/{supplement.dailyLimit}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-base font-bold ${isComplete ? 'text-green-600' : count > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+                            {count}/{supplement.dailyLimit}
+                          </span>
+                          {isComplete && <Check className="w-5 h-5 text-green-600" />}
+                        </div>
                       </button>
                     );
                   })}
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">* 모든 횟수를 채운 영양제는 회색으로 표시되며 클릭할 수 없습니다.</p>
+                  <p className="text-xs text-gray-500">* 완료된 영양제를 다시 클릭하면 기록이 초기화됩니다.</p>
                 </div>
               </div>
             )}
