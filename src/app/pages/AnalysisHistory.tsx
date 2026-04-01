@@ -1,4 +1,4 @@
-import { MessageSquare, Leaf } from 'lucide-react';
+import { MessageCircle, Leaf, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
 import { api, getCognitoId } from '../api';
@@ -109,7 +109,7 @@ export function AnalysisHistory() {
 
             {!isLoading && !error && records.length === 0 && (
               <div className="text-center py-16">
-                <MessageSquare className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <MessageCircle className="w-10 h-10 text-gray-200 mx-auto mb-3" />
                 <p className="text-gray-400 text-sm">아직 분석 기록이 없습니다.</p>
                 <p className="text-gray-300 text-xs mt-1">분석하기 탭에서 첫 분석을 시작해보세요.</p>
               </div>
@@ -126,7 +126,8 @@ export function AnalysisHistory() {
                   <p className="text-xs text-gray-400">{record.date}</p>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-blue-500 font-medium bg-blue-50 px-2.5 py-1 rounded-full">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-blue-500 font-medium bg-blue-50 px-2.5 py-1 rounded-full">
+                      <Sparkles className="w-3 h-3" />
                       {record.purpose}
                     </span>
                   </div>
@@ -147,10 +148,10 @@ export function AnalysisHistory() {
                 </div>
 
                 <button
-                  className="shrink-0 flex items-center gap-2 px-4 py-2 border border-gray-200 hover:border-blue-300 hover:text-blue-600 text-gray-500 rounded-lg transition-all duration-200 text-sm active:scale-95"
+                  className="shrink-0 flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all duration-200 text-sm font-medium active:scale-95 shadow-sm"
                   onClick={(e) => handleChatbotClick(e, record.id)}
                 >
-                  <MessageSquare className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4" />
                   <span>상담하기</span>
                 </button>
               </div>
