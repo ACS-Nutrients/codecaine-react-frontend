@@ -27,44 +27,59 @@ export function RecordHistory() {
 
   const cognitoId = getCognitoId() ?? '';
 
+  const buildSupplements = useCallback((suppData: any, recordData: any) => {
+    const recordMap: Record<number, Record<string, number>> = {};
+    for (const day of recordData.records ?? []) {
+      for (const s of day.supplements) {
+        if (!recordMap[s.current_id]) recordMap[s.current_id] = {};
+        recordMap[s.current_id][day.date] = s.taken_count;
+      }
+    }
+    return suppData.supplements.map((s: any, idx: number) => ({
+      id: s.current_id,
+      name: s.itk_product_name ?? '-',
+      color: COLORS[idx % COLORS.length],
+      dailyLimit: s.itk_serving_per_day ?? 1,
+      records: recordMap[s.current_id] ?? {},
+      remainingCount: s.remaining_count ?? null,
+      lowStock: s.low_stock ?? false,
+    }));
+  }, []);
+
   const fetchData = useCallback(async (date: Date) => {
     if (!cognitoId) return;
     setLoading(true);
     try {
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
-
       const [suppData, recordData] = await Promise.all([
         api.getIntakeSupplements(cognitoId, true),
         api.getRecords(cognitoId, year, month),
       ]);
-
-      const recordMap: Record<number, Record<string, number>> = {};
-      for (const day of recordData.records ?? []) {
-        for (const s of day.supplements) {
-          if (!recordMap[s.current_id]) recordMap[s.current_id] = {};
-          recordMap[s.current_id][day.date] = s.taken_count;
-        }
-      }
-
-      setSupplements(
-        suppData.supplements.map((s: any, idx: number) => ({
-          id: s.current_id,
-          name: s.itk_product_name ?? '-',
-          color: COLORS[idx % COLORS.length],
-          dailyLimit: s.itk_serving_per_day ?? 1,
-          records: recordMap[s.current_id] ?? {},
-          remainingCount: s.remaining_count ?? null,
-          lowStock: s.low_stock ?? false,
-        }))
-      );
+      setSupplements(buildSupplements(suppData, recordData));
       setError(null);
     } catch (e: any) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [cognitoId]);
+  }, [cognitoId, buildSupplements]);
+
+  // 낙관적 업데이트 후 잔여수량만 조용히 갱신 (loading 없이)
+  const silentRefreshSupplements = useCallback(async (date: Date) => {
+    if (!cognitoId) return;
+    try {
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const [suppData, recordData] = await Promise.all([
+        api.getIntakeSupplements(cognitoId, true),
+        api.getRecords(cognitoId, year, month),
+      ]);
+      setSupplements(buildSupplements(suppData, recordData));
+    } catch {
+      // 조용히 무시 (낙관적 업데이트 유지)
+    }
+  }, [cognitoId, buildSupplements]);
 
   useEffect(() => {
     fetchData(currentDate);
@@ -124,10 +139,8 @@ export function RecordHistory() {
 
     try {
       await api.upsertRecord(cognitoId, supplementId, dateKey, newCount);
-      // 재고 변동 후 최신 remaining_count 갱신
-      await fetchData(currentDate);
     } catch {
-      // 실패 시 롤백
+      // upsert 실패 시에만 롤백
       setSupplements(prev =>
         prev.map(s => {
           if (s.id !== supplementId) return s;
@@ -137,7 +150,11 @@ export function RecordHistory() {
           return { ...s, records: newRecords };
         })
       );
+      return;
     }
+
+    // upsert 성공 후 잔여수량 조용히 갱신 (loading 없이, 낙관적 업데이트 유지)
+    silentRefreshSupplements(currentDate);
   };
 
   const getCountForDate = (supplementId: number, dateKey: string | null): number => {
