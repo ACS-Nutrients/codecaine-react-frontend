@@ -283,10 +283,11 @@ export function RecordHistory() {
                     return (
                       <button
                         key={supplement.id}
-                        onClick={() => handleSupplementClick(supplement.id, selectedDate)}
+                        onClick={() => !isComplete && handleSupplementClick(supplement.id, selectedDate)}
+                        disabled={isComplete}
                         className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                           isComplete
-                            ? 'border-green-400 bg-green-50 hover:bg-green-100'
+                            ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
                             : count > 0
                             ? 'border-blue-400 bg-blue-50 hover:bg-blue-100'
                             : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'
@@ -295,7 +296,7 @@ export function RecordHistory() {
                         <div className="flex items-center gap-3">
                           <div className={`w-4 h-4 ${supplement.color} rounded-full`} />
                           <div className="text-left">
-                            <span className={`text-sm font-medium block ${isComplete ? 'text-green-700' : 'text-gray-700'}`}>
+                            <span className={`text-sm font-medium block ${isComplete ? 'text-gray-400' : 'text-gray-700'}`}>
                               {supplement.name}
                             </span>
                             <span className={`text-[10px] font-medium flex items-center gap-0.5 ${supplement.lowStock ? 'text-amber-600' : 'text-gray-400'}`}>
@@ -305,10 +306,10 @@ export function RecordHistory() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`text-base font-bold ${isComplete ? 'text-green-600' : count > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+                          <span className={`text-base font-bold ${isComplete ? 'text-gray-400' : count > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
                             {count}/{supplement.dailyLimit}
                           </span>
-                          {isComplete && <Check className="w-5 h-5 text-green-600" />}
+                          {isComplete && <Check className="w-5 h-5 text-gray-400" />}
                         </div>
                       </button>
                     );
