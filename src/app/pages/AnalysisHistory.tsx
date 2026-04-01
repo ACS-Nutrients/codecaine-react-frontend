@@ -1,4 +1,4 @@
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Leaf } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
 import { api, getCognitoId } from '../api';
@@ -18,7 +18,15 @@ interface AnalysisHistoryResponse {
 interface RecordType {
   id: number;
   date: string;
-  title: string;
+  purpose: string;
+  nutrients: string[];
+}
+
+function parseNutrients(raw: string): string[] {
+  return raw
+    .split(/[,，]/)
+    .map(s => s.trim())
+    .filter(Boolean);
 }
 
 export function AnalysisHistory() {
@@ -41,7 +49,8 @@ export function AnalysisHistory() {
         setRecords(data.results.map(item => ({
           id: item.result_id,
           date: new Date(item.created_at).toLocaleDateString('ko-KR'),
-          title: item.summary_jsonb.title
+          purpose: item.summary_jsonb['섭취 목적'] ?? item.summary_jsonb.title ?? '—',
+          nutrients: parseNutrients(item.summary_jsonb['필요 영양소'] ?? ''),
         })));
       } catch (err) {
         setError('데이터를 불러오는 데 실패했습니다.');
@@ -97,21 +106,36 @@ export function AnalysisHistory() {
             {!isLoading && !error && records.map((record, idx) => (
               <div
                 key={record.id}
-                className="animate-fade-up flex items-center justify-between p-5 border border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all duration-200 cursor-pointer group"
+                className="animate-fade-up flex items-center justify-between gap-4 p-5 border border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all duration-200 cursor-pointer group"
                 style={{ animationDelay: `${idx * 0.05}s` }}
                 onClick={() => handleViewDetail(record.id)}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
-                    <MessageSquare className="w-5 h-5 text-blue-400" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <p className="text-xs text-gray-400">{record.date}</p>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-blue-500 font-medium bg-blue-50 px-2.5 py-1 rounded-full">
+                      {record.purpose}
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-400 mb-0.5">{record.date}</p>
-                    <h3 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{record.title}</h3>
-                  </div>
+
+                  {record.nutrients.length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Leaf className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                      {record.nutrients.map((n, i) => (
+                        <span
+                          key={i}
+                          className="text-xs text-gray-500 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full"
+                        >
+                          {n}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
                 <button
-                  className="flex items-center gap-2 px-4 py-2 border border-gray-200 hover:border-blue-300 hover:text-blue-600 text-gray-500 rounded-lg transition-all duration-200 text-sm active:scale-95"
+                  className="shrink-0 flex items-center gap-2 px-4 py-2 border border-gray-200 hover:border-blue-300 hover:text-blue-600 text-gray-500 rounded-lg transition-all duration-200 text-sm active:scale-95"
                   onClick={(e) => handleChatbotClick(e, record.id)}
                 >
                   <MessageSquare className="w-4 h-4" />
