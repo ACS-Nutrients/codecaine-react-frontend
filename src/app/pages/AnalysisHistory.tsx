@@ -22,6 +22,15 @@ interface RecordType {
   nutrients: string[];
 }
 
+function parseSummary(text: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const parts = text.split(/\[([^\]]+)\]\s*/).filter(Boolean);
+  for (let i = 0; i < parts.length - 1; i += 2) {
+    result[parts[i].trim()] = (parts[i + 1] ?? '').trim();
+  }
+  return result;
+}
+
 function parseNutrients(raw: string): string[] {
   return raw
     .split(/[,，]/)
@@ -46,12 +55,15 @@ export function AnalysisHistory() {
 
       try {
         const data: AnalysisHistoryResponse = await api.getAnalysisHistory(cognitoId, 10, 0);
-        setRecords(data.results.map(item => ({
-          id: item.result_id,
-          date: new Date(item.created_at).toLocaleDateString('ko-KR'),
-          purpose: item.summary_jsonb['섭취 목적'] ?? item.summary_jsonb.title ?? '—',
-          nutrients: parseNutrients(item.summary_jsonb['필요 영양소'] ?? ''),
-        })));
+        setRecords(data.results.map(item => {
+          const parsed = parseSummary(item.summary_jsonb?.title ?? '');
+          return {
+            id: item.result_id,
+            date: new Date(item.created_at).toLocaleDateString('ko-KR'),
+            purpose: parsed['섭취 목적'] ?? '—',
+            nutrients: parseNutrients(parsed['필요 영양소'] ?? ''),
+          };
+        }));
       } catch (err) {
         setError('데이터를 불러오는 데 실패했습니다.');
       } finally {
