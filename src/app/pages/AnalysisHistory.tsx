@@ -75,7 +75,7 @@ export function AnalysisHistory() {
   }, []);
 
   const handleViewDetail = (recordId: number) => {
-    navigate(`/recommendation-result?result_id=${recordId}`);
+    navigate(`/recommendation-result?result_id=${recordId}&source=history`);
   };
 
   const handleChatbotClick = (e: React.MouseEvent, recordId: number) => {

@@ -77,7 +77,8 @@ export function RecommendationResult() {
   const navigate  = useNavigate();
   const [searchParams] = useSearchParams();
   const location  = useLocation();
-  const resultId  = searchParams.get('result_id');
+  const resultId     = searchParams.get('result_id');
+  const fromHistory  = searchParams.get('source') === 'history';
 
   const examItems: ExamItem[] = (location.state as any)?.examItems ?? [];
   const examDate: string      = (location.state as any)?.examDate ?? '';
@@ -163,59 +164,61 @@ export function RecommendationResult() {
 
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-5">
 
-        {/* ══ 1. 건강검진 결과 ══ */}
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="h-0.5 bg-blue-400" />
-          <div className="px-6 py-5 flex items-center gap-3 border-b border-gray-100">
-            <FlaskConical className="w-4 h-4 text-blue-400 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-gray-900">건강검진 결과</p>
-              <p className="text-xs text-gray-400 mt-0.5">CODEF 검진 데이터</p>
+        {/* ══ 1. 건강검진 결과 ══ (분석 완료 직후 진입 시에만 표시) */}
+        {!fromHistory && (
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="h-0.5 bg-blue-400" />
+            <div className="px-6 py-5 flex items-center gap-3 border-b border-gray-100">
+              <FlaskConical className="w-4 h-4 text-blue-400 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-gray-900">건강검진 결과</p>
+                <p className="text-xs text-gray-400 mt-0.5">CODEF 검진 데이터</p>
+              </div>
             </div>
-          </div>
-          <div className="px-6 py-4">
-            {examItems.length > 0 ? (
-              <div className="rounded-xl border border-gray-100 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="text-left text-gray-500 font-semibold px-4 py-2.5 text-xs">항목</th>
-                      <th className="text-left text-gray-500 font-semibold px-4 py-2.5 text-xs">결과</th>
-                      <th className="text-left text-gray-500 font-semibold px-4 py-2.5 text-xs">기준</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {examDate && (
-                      <tr className="border-b border-gray-50">
-                        <td className="px-4 py-2.5 text-xs font-medium text-gray-700">검진일</td>
-                        <td className="px-4 py-2.5 text-xs text-gray-600" colSpan={2}>{examDate}</td>
+            <div className="px-6 py-4">
+              {examItems.length > 0 ? (
+                <div className="rounded-xl border border-gray-100 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <th className="text-left text-gray-500 font-semibold px-4 py-2.5 text-xs">항목</th>
+                        <th className="text-left text-gray-500 font-semibold px-4 py-2.5 text-xs">결과</th>
+                        <th className="text-left text-gray-500 font-semibold px-4 py-2.5 text-xs">기준</th>
                       </tr>
-                    )}
-                    {examItems.map((item, idx) => {
-                      const s = item.status === '정상' ? 'text-green-600 bg-green-50'
-                              : item.status === '부족' ? 'text-red-500 bg-red-50'
-                              : 'text-orange-500 bg-orange-50';
-                      return (
-                        <tr key={item.id} className={idx < examItems.length - 1 ? 'border-b border-gray-50' : ''}>
-                          <td className="px-4 py-2.5 text-xs font-medium text-gray-800">{item.name}</td>
-                          <td className="px-4 py-2.5 text-xs text-gray-700">
-                            {item.value} {item.unit}
-                            <span className={`ml-2 px-1.5 py-0.5 rounded-full text-xs font-medium ${s}`}>{item.status}</span>
-                          </td>
-                          <td className="px-4 py-2.5 text-xs text-gray-400">{item.range}</td>
+                    </thead>
+                    <tbody>
+                      {examDate && (
+                        <tr className="border-b border-gray-50">
+                          <td className="px-4 py-2.5 text-xs font-medium text-gray-700">검진일</td>
+                          <td className="px-4 py-2.5 text-xs text-gray-600" colSpan={2}>{examDate}</td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-14 rounded-xl bg-gray-50 text-sm text-gray-400">
-                CODEF 건강검진 데이터가 없습니다.
-              </div>
-            )}
-          </div>
-        </section>
+                      )}
+                      {examItems.map((item, idx) => {
+                        const s = item.status === '정상' ? 'text-green-600 bg-green-50'
+                                : item.status === '부족' ? 'text-red-500 bg-red-50'
+                                : 'text-orange-500 bg-orange-50';
+                        return (
+                          <tr key={item.id} className={idx < examItems.length - 1 ? 'border-b border-gray-50' : ''}>
+                            <td className="px-4 py-2.5 text-xs font-medium text-gray-800">{item.name}</td>
+                            <td className="px-4 py-2.5 text-xs text-gray-700">
+                              {item.value} {item.unit}
+                              <span className={`ml-2 px-1.5 py-0.5 rounded-full text-xs font-medium ${s}`}>{item.status}</span>
+                            </td>
+                            <td className="px-4 py-2.5 text-xs text-gray-400">{item.range}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-14 rounded-xl bg-gray-50 text-sm text-gray-400">
+                  CODEF 건강검진 데이터가 없습니다.
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ══ 2. AI 분석 ══ */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
