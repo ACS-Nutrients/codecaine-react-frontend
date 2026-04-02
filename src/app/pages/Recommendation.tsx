@@ -990,15 +990,15 @@ function StepPurpose({ onConfirm, onBack }: { onConfirm: (purposes: string[]) =>
   const [customInput, setCustomInput] = useState('');
 
   const purposes = [
-    { id: 'health', label: '건강 유지', icon: '💪', description: '일상적인 건강 관리' },
-    { id: 'immunity', label: '면역력 강화', icon: '🛡️', description: '감기 예방 및 면역 증진' },
-    { id: 'energy', label: '에너지 증진', icon: '⚡', description: '활력 및 피로 회복' },
-    { id: 'beauty', label: '피부/모발 관리', icon: '✨', description: '미용 및 안티에이징' },
-    { id: 'bone', label: '뼈 건강', icon: '🦴', description: '골다공증 예방' },
-    { id: 'eye', label: '눈 건강', icon: '👁️', description: '시력 보호' },
-    { id: 'heart', label: '심혈관 건강', icon: '❤️', description: '혈압 및 콜레스테롤 관리' },
-    { id: 'brain', label: '두뇌 활동', icon: '🧠', description: '집중력 및 기억력 향상' },
-    { id: 'digestion', label: '소화 건강', icon: '🌿', description: '장 건강 및 유산균' },
+    { id: '건강 유지', label: '건강 유지', icon: '💪', description: '일상적인 건강 관리' },
+    { id: '면역력 강화', label: '면역력 강화', icon: '🛡️', description: '감기 예방 및 면역 증진' },
+    { id: '에너지 증진', label: '에너지 증진', icon: '⚡', description: '활력 및 피로 회복' },
+    { id: '피부/모발 관리', label: '피부/모발 관리', icon: '✨', description: '미용 및 안티에이징' },
+    { id: '뼈 건강', label: '뼈 건강', icon: '🦴', description: '골다공증 예방' },
+    { id: '눈 건강', label: '눈 건강', icon: '👁️', description: '시력 보호' },
+    { id: '심혈관 건강', label: '심혈관 건강', icon: '❤️', description: '혈압 및 콜레스테롤 관리' },
+    { id: '두뇌 활동', label: '두뇌 활동', icon: '🧠', description: '집중력 및 기억력 향상' },
+    { id: '소화 건강', label: '소화 건강', icon: '🌿', description: '장 건강 및 유산균' },
   ];
 
   const togglePurpose = (id: string) => {
